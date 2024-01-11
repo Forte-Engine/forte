@@ -1,5 +1,5 @@
 [package]
-name = "forte"
+name = "forte_engine"
 description = "A core for a basic render/game engine designed to have little overhead."
 license = "MIT"
 version = "0.1.0"
