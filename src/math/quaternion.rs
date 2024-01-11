@@ -1,5 +1,5 @@
 use cgmath::*;
-use crate::euler::*;
+use crate::math::euler::*;
 
 pub trait QuaternionExt {
     fn euler_deg(x: f32, y: f32, z: f32) -> Quaternion<f32>;

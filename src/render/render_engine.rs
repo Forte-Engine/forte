@@ -3,7 +3,7 @@ use std::time::SystemTime;
 use cgmath::Point2;
 use winit::{window::Window, event::WindowEvent};
 
-use crate::{RenderEngineApp, primitives::{mesh::Mesh, cameras::Camera, vertices::Vertex}, textures::{textures::Texture, depth_textures::DepthTexture}, pipelines::Pipeline, resources::{ResourceCache, Handle}, files::Files};
+use crate::render::{RenderEngineApp, primitives::{mesh::Mesh, cameras::Camera, vertices::Vertex}, textures::{textures::Texture, depth_textures::DepthTexture}, pipelines::Pipeline, resources::{ResourceCache, Handle}, files::Files};
 
 #[derive(Debug)]
 pub struct RenderEngine {

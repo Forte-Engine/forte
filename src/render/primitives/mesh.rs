@@ -1,6 +1,6 @@
 use wgpu::util::DeviceExt;
 
-use crate::primitives::vertices::Vertex;
+use crate::render::primitives::vertices::Vertex;
 
 #[derive(Debug)]
 pub struct Mesh {

@@ -1,6 +1,6 @@
 use wgpu::BindGroupLayout;
 
-use crate::{render_engine::RenderEngine, textures::depth_textures::DepthTexture};
+use crate::render::{RenderEngine, textures::depth_textures::DepthTexture};
 
 #[derive(Debug)]
 pub struct Pipeline {

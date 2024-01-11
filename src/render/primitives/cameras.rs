@@ -2,7 +2,7 @@ use cgmath::*;
 use wgpu::util::DeviceExt;
 use winit::event::{ElementState, VirtualKeyCode};
 
-use crate::{OPENGL_TO_WGPU_MATRIX, render_engine::{RenderEngine, RenderEngineInput}};
+use crate::render::{OPENGL_TO_WGPU_MATRIX, render_engine::{RenderEngine, RenderEngineInput}};
 
 #[derive(Debug)]
 pub struct Camera {

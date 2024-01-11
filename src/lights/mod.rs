@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use lights::LightUniform;
-use render::render_engine::RenderEngine;
+use crate::render::render_engine::RenderEngine;
 use wgpu::util::DeviceExt;
 pub mod lights;
 

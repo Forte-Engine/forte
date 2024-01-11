@@ -1,3 +1,3 @@
-pub use math as math;
-pub use render as render;
-pub use lights as lights;
+pub mod math;
+pub mod render;
+pub mod lights;

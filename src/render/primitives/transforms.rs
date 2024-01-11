@@ -1,5 +1,5 @@
 use cgmath::*;
-use math::transforms::Transform;
+use crate::math::transforms::Transform;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
