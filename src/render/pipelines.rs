@@ -2,13 +2,48 @@ use wgpu::BindGroupLayout;
 
 use crate::render::{RenderEngine, textures::depth_textures::DepthTexture};
 
+/// The forte representation of a render pipeline.  This is effectively a shader with some necessary WGPU layouts.
 #[derive(Debug)]
 pub struct Pipeline {
     pub render_pipeline: wgpu::RenderPipeline
 }
 
 impl Pipeline {
-    pub fn new(name: &str, engine: &RenderEngine, shader_code: &str, buffers: &[wgpu::VertexBufferLayout], layouts: &[&wgpu::BindGroupLayout]) -> Self {
+    /// Create a new shader with a given name, render engine, shader code, buffer layouts, and bind group layouts.
+    /// 
+    /// Arguments:
+    /// * name: &str - The name of the pipeline for debugging purposes.
+    /// * engine: &RenderEngine - The render engine that will be used to create the pipeline.
+    /// * shader_code: &str - The WGSL shader code for this pipeline.
+    /// * buffers: &[wgpu::VertexBufferLayout] - An array of vertex buffer layouts for the shader.
+    /// * layouts: &[wgpu::BindGroupLayout] - An array of bind group layouts for the shader.
+    /// 
+    /// Returns the new pipeline that is generated from the above arguments.
+    /// 
+    /// Example:
+    /// ```rust
+    /// Pipeline::new(
+    ///     "shader", 
+    ///     engine, 
+    ///     include_str!("path_to_file"),
+    ///     &[
+    ///         Vertex::desc(), 
+    ///         TransformRaw::desc()
+    ///     ],
+    ///     &[
+    ///         &engine.device.create_bind_group_layout(&Camera::BIND_LAYOUT),
+    ///         &engine.device.create_bind_group_layout(&Texture::BIND_LAYOUT),
+    ///         &engine.device.create_bind_group_layout(&LightUniform::BIND_LAYOUT)
+    ///     ]
+    /// );
+    /// ```
+    pub fn new(
+        name: &str, 
+        engine: &RenderEngine, 
+        shader_code: &str, 
+        buffers: &[wgpu::VertexBufferLayout], 
+        layouts: &[&wgpu::BindGroupLayout]
+    ) -> Self {
         // create shader
         let shader = engine.device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some(name),
@@ -68,6 +103,12 @@ impl Pipeline {
         }
     }
 
+    /// Get a bind group at a given index
+    /// 
+    /// Arguments:
+    /// * index: u32 - the index of the bind group
+    /// 
+    /// Returns the bind group layout
     pub fn get_layout(&self, index: u32) -> BindGroupLayout {
         self.render_pipeline.get_bind_group_layout(index)
     }

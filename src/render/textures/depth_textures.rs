@@ -1,3 +1,4 @@
+/// A representation of a WGPU texture with a texture view and sampler for a texture that is meant to be used as a depth texture.
 #[derive(Debug)]
 pub struct DepthTexture {
     pub texture: wgpu::Texture,
@@ -6,7 +7,17 @@ pub struct DepthTexture {
 }
 
 impl DepthTexture {
+    /// The texture format to be used for depth textures.
     pub const DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;
+
+    /// Create a new depth texture for WGPU.
+    /// 
+    /// Arguments:
+    /// * config: &wgpu::SurfaceConfiguration - A WGPU surface configuration to be used to create the depth texture.
+    /// * device: &wgpu::Device - A WGPU device to be used to create the depth texture.
+    /// * label: &str - The label for the depth texture.
+    /// 
+    /// Returns the created depth texture.
     pub fn new(
         config: &wgpu::SurfaceConfiguration,
         device: &wgpu::Device, 

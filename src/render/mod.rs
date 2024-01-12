@@ -9,6 +9,7 @@ pub mod textures;
 pub mod render_engine;
 pub mod resources;
 
+/// A useful matrix for converting opengl matrices to WGPU matrices.  Used in rendering to make our lives easy.
 #[rustfmt::skip]
 pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
     1.0, 0.0, 0.0, 0.0,
@@ -17,14 +18,30 @@ pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
     0.0, 0.0, 0.0, 1.0,
 );
 
+/// A trait implemented by any struct using a render engine.  The run_app function will automatically call all functions when appropriate.
 pub trait RenderEngineApp {
+    /// The create function is used by the run_app function to create a new app.  This is to be used to initialize the app with a render engine.
     fn create(engine: &mut RenderEngine) -> Self;
+
+    /// The input function is called when an input is picked up by the event loop in the run_app function.  See RenderEngineInput documentation for more info.
     fn input(&mut self, engine: &mut RenderEngine, input: RenderEngineInput);
+
+    /// The update function that will be called once per frame before rendering occurs.
     fn update(&mut self, engine: &mut RenderEngine);
+
+    /// The render function that will be called once per frame after update with the necessary data to construct whatever render pass you wish with WGPU for rendering.
     fn render(&mut self, engine: &mut RenderEngine, view: &wgpu::TextureView, encoder: &mut wgpu::CommandEncoder);
+
+    /// The exit function that is called when the program exits.
     fn exit(&mut self, engine: &mut RenderEngine);
 }
 
+/// The run_app function effectively creates an runs the app given as a generic argument.
+/// 
+/// This function will automatically call the create function on startup just after the window is created and render engine initialized.
+/// Then the once per frame, the apps update and render functions will be called.
+/// When an exit is request the loop will stop and then the exit function will be called before cleaning up all resources used by the render engine and this function.
+/// When an input is received through the event loop is first passed to the render engine for initial processing before the apps input function is called.
 pub async fn run_app<T: RenderEngineApp + 'static>() {
     env_logger::init();
 

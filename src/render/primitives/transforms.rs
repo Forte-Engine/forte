@@ -9,6 +9,7 @@ pub struct TransformRaw {
 }
 
 impl TransformRaw {
+    /// Creates a new vertex buffer layout that describes on a pipline should use raw transforms.  This is here to promote consistency across implementations.
     pub fn desc() -> wgpu::VertexBufferLayout<'static> {
         use std::mem;
         wgpu::VertexBufferLayout {
@@ -61,6 +62,7 @@ impl TransformRaw {
         }
     }
 
+    /// Create a new raw transform from the given transform.
     pub fn from_generic(transform: &Transform) -> Self {
         TransformRaw {
             model: transform.to_mat().into(),

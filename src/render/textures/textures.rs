@@ -1,6 +1,7 @@
 use image::GenericImageView;
 use anyhow::*;
 
+/// A representation of a WGPU texture, along with its bind group, view, and sampler for shaders.
 #[derive(Debug)]
 pub struct Texture {
     pub texture: wgpu::Texture,
@@ -10,6 +11,7 @@ pub struct Texture {
 }
 
 impl Texture {
+    /// The bind group layout for the texture so there is consistency across implementations that use this texture.
     pub const BIND_LAYOUT: wgpu::BindGroupLayoutDescriptor<'_> = wgpu::BindGroupLayoutDescriptor {
         entries: &[
             wgpu::BindGroupLayoutEntry {
@@ -32,6 +34,15 @@ impl Texture {
         label: Some("texture_bind_group_layout")
     };
 
+    /// Create a new texture from the given bytes.
+    /// 
+    /// Arguments:
+    /// * device: &wgpu::Device - A wgpu device used to create the texture.
+    /// * queue: &wgpu::Queue - A wgpu queue that will be used to load the texture to the GPU.
+    /// * bytes: &[u8] - The bytes of the image.
+    /// * label: &str - A label for the texture.
+    /// 
+    /// Returns a result that will contain the texture if it was loaded properly, otherwise, an error will be thrown.
     pub fn from_bytes(
         device: &wgpu::Device,
         queue: &wgpu::Queue,

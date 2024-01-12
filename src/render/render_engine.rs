@@ -5,6 +5,10 @@ use winit::{window::Window, event::WindowEvent};
 
 use crate::render::{RenderEngineApp, primitives::{mesh::Mesh, cameras::Camera, vertices::Vertex}, textures::{textures::Texture, depth_textures::DepthTexture}, pipelines::Pipeline, resources::{ResourceCache, Handle}, files::Files};
 
+/// A struct with all required information to render to a given window.
+/// 
+/// DO NOT try to create this object by yourself, this object will be proved to your RenderEngineApp.
+/// DO NOT try to modify any values in this struct, this will only cause errors unless you know what you are doing.
 #[derive(Debug)]
 pub struct RenderEngine {
     pub surface: wgpu::Surface,
@@ -94,14 +98,6 @@ impl RenderEngine {
         // setup timing
         let now = SystemTime::now();
         let start_time = now.duration_since(std::time::UNIX_EPOCH).unwrap().as_millis();
-
-        // create light buffer
-        // let default_light = LightUniform::new([2.0, 2.0, 2.0], [1.0, 1.0, 1.0]);
-        // let default_lights = [
-        //     LightUniform::new([2.0, 0.0, 0.0], [1.0, 0.0, 0.0]),
-        //     LightUniform::new([0.0, 2.0, 0.0], [0.0, 1.0, 0.0]),
-        //     LightUniform::new([0.0, 0.0, 2.0], [0.0, 0.0, 1.0]),
-        // ];
 
         Self {
             window, surface, device,
@@ -266,13 +262,27 @@ pub enum RenderEngineInput {
     KeyInput(winit::event::VirtualKeyCode, winit::event::ElementState)
 }
 
+/// A set of functions for RenderPass to setup cameras and draw mesh.
 pub trait DrawMesh<'a, 'b> where 'b: 'a {
+    /// Prepares to draw mesh by setting up a pipeline and a camera to render with.
+    /// 
+    /// Arguments:
+    /// * pipeline: &Pipeline - The pipeline that will be used to render.
+    /// * camera: &Camera - The camera to be used to render.
     fn prepare_draw(
         &mut self,
         pipeline: &'b Pipeline,
         camera: &'b Camera,
     );
 
+    /// Draws a mesh to this render pass.
+    /// 
+    /// Arguments:
+    /// * engine: &RenderEngine - The render engine that will be used to draw this.
+    /// * mesh: &Handle<Mesh> - A handle to the mesh to be drawn.
+    /// * texture: &Handle<Texture> - A handle to the texture the mesh will be drawn with.
+    /// * instance_buf: &wgpu::Buffer - The instances buffer to draw the mesh with.
+    /// * instance_count: u32 - The number of instances in the above buffer.
     fn draw_mesh(
         &mut self,
         engine: &'b RenderEngine,
@@ -282,6 +292,14 @@ pub trait DrawMesh<'a, 'b> where 'b: 'a {
         instance_count: u32
     );
 
+    /// Draws a mesh to this render pass only using its vertices buffer.
+    /// 
+    /// Arguments:
+    /// * engine: &RenderEngine - The render engine that will be used to draw this.
+    /// * mesh: &Handle<Mesh> - A handle to the mesh to be drawn.  Only vertices will be used, the indices buffer will be disregarded.
+    /// * texture: &Handle<Texture> - A handle to the texture to draw the mesh with.
+    /// * instance_buf: &wgpu::Buffer - The instances buffer to draw the mesh with.
+    /// * instance_count: u32 - The number of instances in the above buffer.
     fn draw_list_mesh(
         &mut self,
         engine: &'b RenderEngine,
@@ -292,6 +310,7 @@ pub trait DrawMesh<'a, 'b> where 'b: 'a {
     );
 }
 
+/// An implementation of DrawMesh for wgpu::RenderPass.  See documentation for more information.
 impl<'a, 'b> DrawMesh<'a, 'b> for wgpu::RenderPass<'a> where 'b: 'a {
     fn draw_mesh(
         &mut self,

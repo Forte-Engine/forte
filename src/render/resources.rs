@@ -1,6 +1,7 @@
 use std::{collections::HashMap, marker::PhantomData};
 
-#[derive(Debug, Clone)]
+/// A handle to a resource in a resource cache.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Handle<T> { pub hash: u64, pub data: PhantomData<T> }
 
 impl <T> Handle<T> {
@@ -11,6 +12,7 @@ impl <T> Handle<T> {
     fn new(hash: u64) -> Self { Self { hash, data: PhantomData::default() } }
 }
 
+/// A resource cache that serves as a central place to store resources in a handle that is easily shareable.
 #[derive(Debug, Clone)]
 pub struct ResourceCache<T> {
     assets: HashMap<u64, T>,
@@ -37,6 +39,8 @@ impl<T> ResourceCache<T> {
     /// Arguments
     /// * path - The path ID for this object.
     /// * load - The load function that will be called if this object does not exist in the cache yet.
+    /// 
+    /// Returns a handle to the loaded asset.
     pub fn load<F>(&mut self, path: impl Into<String>, load: F) -> Handle<T> where F: Fn() -> T {
         // hash the path so we can see if an insert is required
         let hash = Self::hash_path(path.into());
@@ -57,12 +61,16 @@ impl<T> ResourceCache<T> {
     /// 
     /// Arguments
     /// * handle - The handle to be used to get the resource from the cache.
+    /// 
+    /// Returns an option that will contain a reference to the resource referenced by the handle if it is present in the cache.
     pub fn get(&self, handle: &Handle<T>) -> Option<&T> { self.assets.get(&handle.hash) }
 
     /// Gets a mutable resource from the cache using the given handle.
     /// 
     /// Arguments
     /// * handle - The handle to be used to get the resource from the cache.
+    /// 
+    /// Returns an option that will contain a mutable reference to the resource referenced by the handle if it is present in the cache.
     pub fn get_mut(&mut self, handle: &Handle<T>) -> Option<&mut T> { self.assets.get_mut(&handle.hash) }
 
     /// Inserts an object into the resource cache with the given hash value.

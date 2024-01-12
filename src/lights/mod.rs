@@ -3,8 +3,10 @@ use std::collections::HashMap;
 use lights::LightUniform;
 use crate::render::render_engine::RenderEngine;
 use wgpu::util::DeviceExt;
+
 pub mod lights;
 
+/// A engine used to drive all lights in the scene.
 #[derive(Debug)]
 pub struct LightEngine {
     // wgpu
@@ -21,16 +23,44 @@ pub struct LightEngine {
 }
 
 impl LightEngine {
+    /// The bind group currently being used by this engine.
     pub fn bind_group(&self) -> &wgpu::BindGroup { &self.light_bind_group }
 
-    // light manipulation functions
+    /// Marks the light engine "dirty" so that its buffers will be updated next time this engine is updated.
     pub fn mark_dirty(&mut self) { self.dirty = true; }
+
+    /// Adds a light to the engine.
+    /// 
+    /// Arguments:
+    /// * id: 32 - The id of the light.
+    /// * light: LightUniform - The lights information.
     pub fn add_light(&mut self, id: u32, light: LightUniform) { self.lights.insert(id, light); self.mark_dirty(); }
-    pub fn remove_light(&mut self, id: u32) { self.lights.remove(&id); self.mark_dirty(); }
+
+    /// Removes a light from the engine.
+    /// 
+    /// Arguments:
+    /// * idx: u32 - The index of the light to be removed.
+    pub fn remove_light(&mut self, idx: u32) { self.lights.remove(&idx); self.mark_dirty(); }
+
+    /// Clears all lights from the engine.
     pub fn clear_lights(&mut self) { self.lights.clear(); self.mark_dirty(); }
+
+    /// Sets the current ambient light color.
+    /// 
+    /// Arguments:
+    /// * ambient: [f32; 3] - The new ambient color.
     pub fn set_ambient_color(&mut self, ambient: [f32; 3]) { self.ambient_color = ambient; }
+
+    /// Gets teh current ambient light color.
+    /// 
+    /// Returns a [f32; 3] of the current ambient light color.
     pub fn get_ambient_color(&self) -> [f32; 3] { return self.ambient_color; }
 
+    /// Creates a new light engine.
+    /// 
+    /// Arguments:
+    /// * engine: &RenderEngine - The render engine this light engine will be used with.
+    /// * ambient_light: [f32; 3] - The ambient light color.
     pub fn new(engine: &RenderEngine, ambient_light: [f32; 3]) -> Self {
         // setup a default light
         let default_light = lights::LightUniform::new([0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [1.0, 0.0, 0.0], 0.0, 0.0, 1000.0);
@@ -90,6 +120,10 @@ impl LightEngine {
         }
     }
 
+    /// Updates the light engine.  This should be called once per frame while lights are in use.
+    /// 
+    /// Arguments:
+    /// * engine: &RenderEngine - The render engine this light engine is being used with.
     pub fn update(&mut self, engine: &RenderEngine) {
         // if not marked dirty, stop here
         if !self.dirty { return }
@@ -161,10 +195,16 @@ impl LightEngine {
     }
 }
 
+/// A trait to add light related functions to a render pass.
 pub trait SetupLights<'a, 'b> where 'b: 'a {
+    /// Loads the lights from the given light engine into the current render pass for rendering.
+    /// 
+    /// Arguments:
+    /// * engine: &LightEngine - The light engine that the lights will be loaded from.
     fn load_lights(&mut self, engine: &'b LightEngine);
 }
 
+/// An implementation of SetupLights for wgpu::RenderPass.
 impl<'a, 'b> SetupLights<'a, 'b> for wgpu::RenderPass<'a> where 'b: 'a {
     fn load_lights(&mut self, engine: &'b LightEngine) {
         self.set_bind_group(2, engine.bind_group(), &[]);
