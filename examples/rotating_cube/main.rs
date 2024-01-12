@@ -91,19 +91,7 @@ impl RenderEngineApp for MainApp {
     }
 
     fn input(&mut self, _engine: &mut RenderEngine, input: RenderEngineInput) {
-        match input {
-            RenderEngineInput::KeyInput(key, state) => {
-                let pressed = state == ElementState::Pressed;
-                match key {
-                    VirtualKeyCode::W => self.controller.set_forward(pressed),
-                    VirtualKeyCode::S => self.controller.set_backward(pressed),
-                    VirtualKeyCode::A => self.controller.set_left(pressed),
-                    VirtualKeyCode::D => self.controller.set_right(pressed),
-                    _ => {}
-                }
-            }
-            _ => {}
-        }
+        self.controller.input(&input);
     }
 
     fn update(&mut self, engine: &mut RenderEngine) {
