@@ -72,5 +72,3 @@ var<uniform> num_lights: u32;
 @group(2) @binding(2)
 var<uniform> ambient_light: vec3<f32>;
 ```
-
-## Examples
