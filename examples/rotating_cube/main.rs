@@ -1,7 +1,6 @@
 use cgmath::{Rotation3, Quaternion};
 use forte_engine::{render::{primitives::{vertices::Vertex, mesh::Mesh, cameras::{CameraController, Camera}, transforms::TransformRaw}, pipelines::Pipeline, resources::Handle, textures::textures::Texture, render_engine::{RenderEngine, RenderEngineInput, DrawMesh}, RenderEngineApp, run_app}, math::transforms::Transform};
 use wgpu::util::DeviceExt;
-use winit::event::{ElementState, VirtualKeyCode};
 
 const VERTICES: &[Vertex] = &[
     Vertex { position: [ 0.5, -0.5, -0.5], tex_coords: [0.4131759, 0.00759614], normal: [0.0, 0.0, 0.0] },
