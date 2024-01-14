@@ -1,8 +1,11 @@
-use render_engine::{RenderEngine, RenderEngineInput};
+use render_engine::RenderEngine;
 use log::warn;
 use winit::{window::WindowBuilder, event_loop::{EventLoop, ControlFlow}, event::{Event, WindowEvent}};
 
+use self::input::EngineInput;
+
 pub mod files;
+pub mod input;
 pub mod pipelines;
 pub mod primitives;
 pub mod textures;
@@ -25,7 +28,7 @@ pub trait RenderEngineApp {
     fn create(engine: &mut RenderEngine) -> Self;
 
     /// The input function is called when an input is picked up by the event loop in the run_app function.  See RenderEngineInput documentation for more info.
-    fn input(&mut self, engine: &mut RenderEngine, input: RenderEngineInput);
+    fn input(&mut self, engine: &mut RenderEngine, input: EngineInput);
 
     /// The update function that will be called once per frame before rendering occurs.
     fn update(&mut self, engine: &mut RenderEngine);

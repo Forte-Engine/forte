@@ -1,15 +1,14 @@
 use std::time::SystemTime;
 
-use cgmath::Point2;
 use winit::{window::Window, event::WindowEvent};
 
 use crate::render::{RenderEngineApp, primitives::{mesh::Mesh, cameras::Camera, vertices::Vertex}, textures::{textures::Texture, depth_textures::DepthTexture}, pipelines::Pipeline, resources::{ResourceCache, Handle}, files::Files};
 
-use super::render_utils;
+use super::{render_utils, input::EngineInput};
 
 /// A struct with all required information to render to a given window.
 /// 
-/// DO NOT try to create this object by yourself, this object will be proved to your RenderEngineApp.
+/// DO NOT try to create this object by yourself, this object will be provided to your RenderEngineApp.
 /// DO NOT try to modify any values in this struct, this will only cause errors unless you know what you are doing.
 #[derive(Debug)]
 pub struct RenderEngine {
@@ -118,45 +117,14 @@ impl RenderEngine {
     /// Arguments
     /// * app - The app to which inputs should be passed too.
     pub fn input(&mut self, app: &mut Box<impl RenderEngineApp + 'static>, event: &WindowEvent) -> bool {
-        match event {
-            WindowEvent::CursorMoved { position, .. } => {
-                app.input(
-                    self, 
-                    RenderEngineInput::MouseMove(
-                        Point2 { 
-                            x: position.x as f32, 
-                            y: position.y as f32 
-                        }
-                    )
-                );
-                true
-            }
+        // convert the winit event to a `EngineInput`
+        let input = EngineInput::from_winit_input(event);
 
-            WindowEvent::MouseInput { state, button, .. } => {
-                app.input(
-                    self,
-                    RenderEngineInput::MouseButton(*button, *state)
-                );
-                true
-            }
-
-            WindowEvent::MouseWheel { delta, .. } => {
-                app.input(self, RenderEngineInput::MouseWheel(*delta));
-                true
-            },
-
-            WindowEvent::KeyboardInput { input, .. } => {
-                if input.virtual_keycode.is_some() {
-                    app.input(
-                        self,
-                        RenderEngineInput::KeyInput(input.virtual_keycode.unwrap(), input.state)
-                    );
-                }
-                true
-            },
-
-            _ => false
-        }
+        // if the input is some, call the apps input function and return true, otherwise return false
+        if input.is_some() {
+            app.input(self, input.unwrap());
+            true
+        } else { false }
     }
 
     /// Resizes all resources used for rendering to the new size given.
@@ -242,14 +210,6 @@ impl RenderEngine {
             Mesh::from_raw(&self.device, vertices, indices) 
         }) 
     }
-}
-
-#[derive(Clone, Copy, Debug)]
-pub enum RenderEngineInput {
-    MouseMove(Point2<f32>),
-    MouseButton(winit::event::MouseButton, winit::event::ElementState),
-    MouseWheel(winit::event::MouseScrollDelta),
-    KeyInput(winit::event::VirtualKeyCode, winit::event::ElementState)
 }
 
 /// A set of functions for RenderPass to setup cameras and draw mesh.

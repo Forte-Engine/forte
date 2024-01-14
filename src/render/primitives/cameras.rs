@@ -2,7 +2,7 @@ use cgmath::*;
 use wgpu::util::DeviceExt;
 use winit::event::{ElementState, VirtualKeyCode};
 
-use crate::render::{OPENGL_TO_WGPU_MATRIX, render_engine::{RenderEngine, RenderEngineInput}};
+use crate::render::{OPENGL_TO_WGPU_MATRIX, render_engine::*, input::EngineInput};
 
 /// A representation of all information needed to properly use a camera in WGPU.
 #[derive(Debug)]
@@ -150,9 +150,9 @@ impl CameraController {
     /// 
     /// Arguments:
     /// * input: &RenderEngineInput - The input to be processed.
-    pub fn input(&mut self, input: &RenderEngineInput) {
+    pub fn input(&mut self, input: &EngineInput) {
         match input {
-            RenderEngineInput::KeyInput(key, state) => {
+            EngineInput::KeyInput(key, state) => {
                 let pressed = state == &ElementState::Pressed;
                 match key {
                     VirtualKeyCode::W => self.set_forward(pressed),
