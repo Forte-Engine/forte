@@ -5,6 +5,8 @@ use winit::{window::Window, event::WindowEvent};
 
 use crate::render::{RenderEngineApp, primitives::{mesh::Mesh, cameras::Camera, vertices::Vertex}, textures::{textures::Texture, depth_textures::DepthTexture}, pipelines::Pipeline, resources::{ResourceCache, Handle}, files::Files};
 
+use super::render_utils;
+
 /// A struct with all required information to render to a given window.
 /// 
 /// DO NOT try to create this object by yourself, this object will be proved to your RenderEngineApp.
@@ -180,26 +182,14 @@ impl RenderEngine {
     /// 
     /// Returns a result with an error from wgpu if it occurs, this will return nothing if no errors occur.
     pub fn render(&mut self, app: &mut Box<impl RenderEngineApp + 'static>) -> Result<(), wgpu::SurfaceError> {
-        // create output, view, and encoder
-        let output = self.surface.get_current_texture()?;
-        let view = output.texture.create_view(&wgpu::TextureViewDescriptor::default());
-        let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
-            label: Some("Render Encoder"),
-        });
+        // start the render and get some render resources
+        let mut render_resources = render_utils::prepare_render(&self)?;
 
         // call app render
-        app.render(self, &view, &mut encoder);
+        app.render(self, &render_resources.view, &mut render_resources.encoder);
 
-        // render the queue and wrap up
-        self.queue.submit(std::iter::once(encoder.finish()));
-        output.present();
-
-        // update time since start and delta time
-        let now = SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis();
-        let old_time = self.time_since_start;
-        let ms_since_start = if now > self.start_time { now - self.start_time } else { 0 };
-        self.time_since_start = ms_since_start as f32 / 1000.0;
-        self.delta_time = self.time_since_start - old_time;
+        // finalize the render
+        render_utils::finalize_render(self, render_resources);
 
         Ok(())
     }
