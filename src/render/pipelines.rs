@@ -1,6 +1,6 @@
 use wgpu::BindGroupLayout;
 
-use crate::render::{RenderEngine, textures::depth_textures::DepthTexture};
+use crate::render::{render_engine::RenderEngine, textures::depth_textures::DepthTexture};
 
 /// The forte representation of a render pipeline.  This is effectively a shader with some necessary WGPU layouts.
 #[derive(Debug)]

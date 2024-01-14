@@ -1,5 +1,5 @@
 use cgmath::{Rotation3, Quaternion};
-use forte_engine::{render::{primitives::{vertices::Vertex, mesh::Mesh, cameras::{CameraController, Camera}, transforms::TransformRaw}, pipelines::Pipeline, resources::Handle, textures::textures::Texture, render_engine::*, RenderEngineApp, run_app, input::EngineInput}, math::transforms::Transform};
+use forte_engine::{render::{primitives::{vertices::Vertex, mesh::Mesh, cameras::{CameraController, Camera}, transforms::TransformRaw}, pipelines::Pipeline, resources::Handle, textures::textures::Texture, render_engine::*, input::EngineInput, render_utils}, math::transforms::Transform, EngineApp, run_app};
 use wgpu::util::DeviceExt;
 
 const VERTICES: &[Vertex] = &[
@@ -30,6 +30,7 @@ const INDICES: &[u16] = &[
 
 #[derive(Debug)]
 pub struct MainApp { 
+    render_engine: RenderEngine,
     pipeline: Pipeline,
     mesh: Handle<Mesh>, 
     texture: Handle<Texture>, 
@@ -40,11 +41,11 @@ pub struct MainApp {
     instance_buffer: wgpu::Buffer
 }
 
-impl RenderEngineApp for MainApp {
-    fn create(engine: &mut RenderEngine) -> Self {
+impl EngineApp for MainApp {
+    fn create(mut engine: RenderEngine) -> Self {
         // create render pipeline
         let pipeline = Pipeline::new(
-            "std", engine, include_str!("rotating_cube.wgsl"),
+            "std", &engine, include_str!("rotating_cube.wgsl"),
             &[Vertex::desc(), TransformRaw::desc()],
             &[
                 &engine.device.create_bind_group_layout(&Camera::BIND_LAYOUT),
@@ -59,7 +60,7 @@ impl RenderEngineApp for MainApp {
             45.0, 0.1, 100.0
         );
         camera.position = (0.0, 0.0, 5.0).into();
-        camera.update(engine);
+        camera.update(&mut engine);
         let camera_controller = CameraController::new(0.02);
 
         // create instances
@@ -79,17 +80,20 @@ impl RenderEngineApp for MainApp {
             }
         );
 
+        let mesh = engine.create_mesh("test", VERTICES, INDICES);
+        let texture = engine.create_texture("test", include_bytes!("rotating_cube.png"));
+
         // create instance of self
         Self {
-            mesh: engine.create_mesh("test", VERTICES, INDICES),
-            texture: engine.create_texture("test", include_bytes!("rotating_cube.png")),
+            render_engine: engine,
+            mesh, texture,
             camera, pipeline,
             controller: camera_controller,
             instances, instance_buffer
         }
     }
 
-    fn input(&mut self, _engine: &mut RenderEngine, input: EngineInput) {
+    fn input(&mut self, input: EngineInput) {
         self.controller.input(&input);
 
         // display all inputs except mouse move
@@ -99,16 +103,19 @@ impl RenderEngineApp for MainApp {
         }
     }
 
-    fn update(&mut self, engine: &mut RenderEngine) {
+    fn update(&mut self) {
+        // update the camera and its controller
         self.controller.update_camera(&mut self.camera);
-        self.camera.update(engine);
-    }
+        self.camera.update(&mut self.render_engine);
 
-    fn render(&mut self, engine: &mut RenderEngine, view: &wgpu::TextureView, encoder: &mut wgpu::CommandEncoder) {
-        let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: Some("Render Pass"),
-            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                view: &view,
+        // start render and get resources
+        let resources = render_utils::prepare_render(&self.render_engine);
+        let mut resources = if resources.is_ok() { resources.unwrap() } else { return };
+
+        // create rener pass
+        {
+            let color_attachment = wgpu::RenderPassColorAttachment {
+                view: &resources.view,
                 resolve_target: None,
                 ops: wgpu::Operations {
                     load: wgpu::LoadOp::Clear(wgpu::Color {
@@ -119,29 +126,39 @@ impl RenderEngineApp for MainApp {
                     }),
                     store: wgpu::StoreOp::Store,
                 },
-            })],
-            depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
-                view: &engine.depth_texture.view,
-                depth_ops: Some(wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(1.0),
-                    store: wgpu::StoreOp::Store
+            };
+            let mut pass = resources.encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: Some("Render Pass"),
+                color_attachments: &[Some(color_attachment)],
+                depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
+                    view: &self.render_engine.depth_texture.view,
+                    depth_ops: Some(wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(1.0),
+                        store: wgpu::StoreOp::Store
+                    }),
+                    stencil_ops: None
                 }),
-                stencil_ops: None
-            }),
-            occlusion_query_set: None,
-            timestamp_writes: None,
-        });
+                occlusion_query_set: None,
+                timestamp_writes: None,
+            });
 
-        let transform = self.instances.get_mut(0).unwrap();
-        transform.rotation = Quaternion::from_angle_y(cgmath::Deg(engine.time_since_start * 45.0)) * Quaternion::from_angle_z(cgmath::Deg(engine.time_since_start * 45.0));
-        let instance_data = self.instances.iter().map(TransformRaw::from_generic).collect::<Vec<_>>();
-        engine.queue.write_buffer(&self.instance_buffer, 0, bytemuck::cast_slice(&instance_data));
+            let transform = self.instances.get_mut(0).unwrap();
+            transform.rotation = Quaternion::from_angle_y(cgmath::Deg(self.render_engine.time_since_start * 45.0)) * Quaternion::from_angle_z(cgmath::Deg(self.render_engine.time_since_start * 45.0));
+            let instance_data = self.instances.iter().map(TransformRaw::from_generic).collect::<Vec<_>>();
+            self.render_engine.queue.write_buffer(&self.instance_buffer, 0, bytemuck::cast_slice(&instance_data));
 
-        pass.prepare_draw(&self.pipeline, &self.camera);
-        pass.draw_mesh(engine, &self.mesh, &self.texture, &self.instance_buffer, self.instances.len() as u32);
+            pass.prepare_draw(&self.pipeline, &self.camera);
+            pass.draw_mesh(&self.render_engine, &self.mesh, &self.texture, &self.instance_buffer, self.instances.len() as u32);
+        }
+
+        // end render
+        render_utils::finalize_render(&mut self.render_engine, resources);
     }
 
-    fn exit(&mut self, _engine: &mut RenderEngine) {}
+    fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) { self.render_engine.resize(new_size); }
+    fn events_cleared(&mut self) { self.render_engine.next_frame(); }
+
+    fn exit(&mut self) {}
 }
 
 fn main() {

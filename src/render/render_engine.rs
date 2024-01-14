@@ -1,10 +1,8 @@
 use std::time::SystemTime;
 
-use winit::{window::Window, event::WindowEvent};
+use winit::window::Window;
 
-use crate::render::{RenderEngineApp, primitives::{mesh::Mesh, cameras::Camera, vertices::Vertex}, textures::{textures::Texture, depth_textures::DepthTexture}, pipelines::Pipeline, resources::{ResourceCache, Handle}, files::Files};
-
-use super::{render_utils, input::EngineInput};
+use crate::render::{primitives::{mesh::Mesh, cameras::Camera, vertices::Vertex}, textures::{textures::Texture, depth_textures::DepthTexture}, pipelines::Pipeline, resources::{ResourceCache, Handle}, files::Files};
 
 /// A struct with all required information to render to a given window.
 /// 
@@ -111,22 +109,6 @@ impl RenderEngine {
         }
     }
     
-    /// Handle inputs to the given window, returning true if the event is handled.
-    /// This automatically processes and passes appropriate inputs to the given app.
-    /// 
-    /// Arguments
-    /// * app - The app to which inputs should be passed too.
-    pub fn input(&mut self, app: &mut Box<impl RenderEngineApp + 'static>, event: &WindowEvent) -> bool {
-        // convert the winit event to a `EngineInput`
-        let input = EngineInput::from_winit_input(event);
-
-        // if the input is some, call the apps input function and return true, otherwise return false
-        if input.is_some() {
-            app.input(self, input.unwrap());
-            true
-        } else { false }
-    }
-
     /// Resizes all resources used for rendering to the new size given.
     /// 
     /// Arguments
@@ -143,24 +125,8 @@ impl RenderEngine {
         }
     }
 
-    /// Starts a render cycle.  During this cycle, the given apps render function will be called.
-    /// 
-    /// Arguments
-    /// * app - The app whose render functino should be called
-    /// 
-    /// Returns a result with an error from wgpu if it occurs, this will return nothing if no errors occur.
-    pub fn render(&mut self, app: &mut Box<impl RenderEngineApp + 'static>) -> Result<(), wgpu::SurfaceError> {
-        // start the render and get some render resources
-        let mut render_resources = render_utils::prepare_render(&self)?;
-
-        // call app render
-        app.render(self, &render_resources.view, &mut render_resources.encoder);
-
-        // finalize the render
-        render_utils::finalize_render(self, render_resources);
-
-        Ok(())
-    }
+    /// Requests the next frame from the window.
+    pub fn next_frame(&self) { self.window().request_redraw(); }
 
     /// Creates a texture from the given bytes and the given path ID
     /// 
