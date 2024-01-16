@@ -161,6 +161,4 @@ impl EngineApp for MainApp {
     fn exit(&mut self) {}
 }
 
-fn main() {
-    pollster::block_on(run_app::<MainApp>());
-}
+fn main() { run_app::<MainApp>(); }

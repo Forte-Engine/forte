@@ -2,9 +2,10 @@ use log::{warn, info};
 use render::{input::EngineInput, render_engine::RenderEngine};
 use winit::{event_loop::{EventLoop, ControlFlow}, window::WindowBuilder, event::{Event, WindowEvent}, dpi::PhysicalSize};
 
+pub mod lights;
 pub mod math;
 pub mod render;
-pub mod lights;
+pub mod ui;
 
 /// A trait implemented by any struct using a render engine.  The run_app function will automatically call all functions when appropriate.
 pub trait EngineApp {
@@ -33,7 +34,7 @@ pub trait EngineApp {
 /// Then the once per frame, the apps update and render functions will be called.
 /// When an exit is request the loop will stop and then the exit function will be called before cleaning up all resources used by the render engine and this function.
 /// When an input is received through the event loop is first passed to the render engine for initial processing before the apps input function is called.
-pub async fn run_app<T: EngineApp + 'static>() {
+pub fn run_app<T: EngineApp + 'static>() {
     env_logger::init();
 
     // setup window and event loop
@@ -43,7 +44,7 @@ pub async fn run_app<T: EngineApp + 'static>() {
 
     // setup engine
     info!("Creating RenderEngine...");
-    let engine = RenderEngine::new(window).await;
+    let engine = RenderEngine::new(window);
 
     // create app
     info!("Creating app...");

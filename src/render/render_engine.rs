@@ -46,7 +46,7 @@ impl RenderEngine {
     /// 
     /// Arguments
     /// * window - The WGPU window that will be used to create this render engine.
-    pub async fn new(window: Window) -> Self {
+    pub fn new(window: Window) -> Self {
         let size = window.inner_size();
 
         // create wgpu instance
@@ -59,23 +59,23 @@ impl RenderEngine {
         let surface = unsafe { instance.create_surface(&window) }.unwrap();
 
         // create adapter
-        let adapter = instance.request_adapter(
+        let adapter = pollster::block_on(instance.request_adapter(
             &wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::default(),
                 compatible_surface: Some(&surface),
                 force_fallback_adapter: false
             }
-        ).await.unwrap();
+        )).unwrap();
 
         // create device and queue
-        let (device, queue) = adapter.request_device(
+        let (device, queue) = pollster::block_on(adapter.request_device(
             &wgpu::DeviceDescriptor {
                 features: wgpu::Features::VERTEX_WRITABLE_STORAGE,
                 limits: wgpu::Limits::default(),
                 label: None
             },
             None
-        ).await.unwrap();
+        )).unwrap();
 
         // configure surface
         let capabilities = surface.get_capabilities(&adapter);
