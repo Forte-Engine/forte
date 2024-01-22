@@ -1,5 +1,5 @@
 use cgmath::{Rotation3, Quaternion};
-use forte_engine::{render::{primitives::{vertices::Vertex, mesh::Mesh, cameras::{CameraController, Camera}, transforms::TransformRaw}, pipelines::Pipeline, resources::Handle, textures::textures::Texture, render_engine::*, input::EngineInput, render_utils}, math::transforms::Transform, EngineApp, run_app};
+use forte_engine::{end_render, math::transforms::Transform, pass, render::{primitives::{vertices::Vertex, mesh::Mesh, cameras::{CameraController, Camera}, transforms::TransformRaw}, pipelines::Pipeline, resources::Handle, textures::textures::Texture, render_engine::*, input::EngineInput, render_utils}, run_app, start_render, EngineApp};
 use wgpu::util::DeviceExt;
 
 const VERTICES: &[Vertex] = &[
@@ -109,38 +109,14 @@ impl EngineApp for MainApp {
         self.camera.update(&mut self.render_engine);
 
         // start render and get resources
-        let resources = render_utils::prepare_render(&self.render_engine);
-        let mut resources = if resources.is_ok() { resources.unwrap() } else { return };
+        let mut resources = start_render!(self.render_engine);
 
         // create rener pass
         {
-            let color_attachment = wgpu::RenderPassColorAttachment {
-                view: &resources.view,
-                resolve_target: None,
-                ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(wgpu::Color {
-                        r: 0.1,
-                        g: 0.2,
-                        b: 0.3,
-                        a: 1.0,
-                    }),
-                    store: wgpu::StoreOp::Store,
-                },
-            };
-            let mut pass = resources.encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                label: Some("Render Pass"),
-                color_attachments: &[Some(color_attachment)],
-                depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
-                    view: &self.render_engine.depth_texture.view,
-                    depth_ops: Some(wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(1.0),
-                        store: wgpu::StoreOp::Store
-                    }),
-                    stencil_ops: None
-                }),
-                occlusion_query_set: None,
-                timestamp_writes: None,
-            });
+            let mut pass = pass!(
+                self.render_engine, 
+                resources
+            );
 
             let transform = self.instances.get_mut(0).unwrap();
             transform.rotation = Quaternion::from_angle_y(cgmath::Deg(self.render_engine.time_since_start * 45.0)) * Quaternion::from_angle_z(cgmath::Deg(self.render_engine.time_since_start * 45.0));
@@ -152,7 +128,7 @@ impl EngineApp for MainApp {
         }
 
         // end render
-        render_utils::finalize_render(&mut self.render_engine, resources);
+        end_render!(self.render_engine, resources);
     }
 
     fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) { self.render_engine.resize(new_size); }
