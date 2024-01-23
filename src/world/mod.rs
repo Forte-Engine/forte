@@ -191,9 +191,11 @@ macro_rules! run_world {
         }
 
         pub trait WorldApp {
+            // getters
             fn render_engine(&self) -> &RenderEngine;
             fn render_engine_mut(&mut self) -> &mut RenderEngine;
 
+            // basic control flow functions
             fn create(render_engine: RenderEngine) -> Self;
             fn start(&mut self, root: &mut Node);
             fn update(&mut self, root: &mut Node);

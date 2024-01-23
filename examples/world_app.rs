@@ -23,32 +23,6 @@ run_world!(
     ]
 );
 
-const VERTICES: &[Vertex] = &[
-    Vertex { position: [ 0.5, -0.5, -0.5], tex_coords: [0.4131759, 0.00759614], normal: [0.0, 0.0, 0.0] },
-    Vertex { position: [ 0.5, -0.5,  0.5], tex_coords: [0.0048659444, 0.43041354], normal: [0.0, 0.0, 0.0] },
-    Vertex { position: [-0.5, -0.5,  0.5], tex_coords: [0.28081453, 0.949397], normal: [0.0, 0.0, 0.0] },
-    Vertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.85967, 0.84732914], normal: [0.0, 0.0, 0.0] },
-    Vertex { position: [ 0.5,  0.5, -0.5], tex_coords: [0.9414737, 0.2652641], normal: [0.0, 0.0, 0.0] },
-    Vertex { position: [ 0.5,  0.5,  0.5], tex_coords: [0.28081453, 0.949397], normal: [0.0, 0.0, 0.0] },
-    Vertex { position: [-0.5,  0.5,  0.5], tex_coords: [0.85967, 0.84732914], normal: [0.0, 0.0, 0.0] },
-    Vertex { position: [-0.5,  0.5, -0.5], tex_coords: [0.9414737, 0.2652641], normal: [0.0, 0.0, 0.0] },
-];
-
-const INDICES: &[u16] = &[
-    1, 2, 3,
-    4, 7, 6,
-    4, 5, 1,
-    1, 5, 6,
-    6, 7, 3,
-    4, 0, 3,
-    0, 1, 3,
-    5, 4, 6,
-    0, 4, 1,
-    2, 1, 6,
-    2, 6, 3,
-    7, 4, 3
-];
-
 pub struct TestWorldApp {
     render_engine: RenderEngine,
     pipeline: Pipeline,
@@ -147,3 +121,29 @@ fn recr_rotate(node: &mut Node, time: f32) {
 
     node.children.iter_mut().for_each(|build| recr_rotate(build, time));
 }
+
+const VERTICES: &[Vertex] = &[
+    Vertex { position: [ 0.5, -0.5, -0.5], tex_coords: [0.4131759, 0.00759614], normal: [0.0, 0.0, 0.0] },
+    Vertex { position: [ 0.5, -0.5,  0.5], tex_coords: [0.0048659444, 0.43041354], normal: [0.0, 0.0, 0.0] },
+    Vertex { position: [-0.5, -0.5,  0.5], tex_coords: [0.28081453, 0.949397], normal: [0.0, 0.0, 0.0] },
+    Vertex { position: [-0.5, -0.5, -0.5], tex_coords: [0.85967, 0.84732914], normal: [0.0, 0.0, 0.0] },
+    Vertex { position: [ 0.5,  0.5, -0.5], tex_coords: [0.9414737, 0.2652641], normal: [0.0, 0.0, 0.0] },
+    Vertex { position: [ 0.5,  0.5,  0.5], tex_coords: [0.28081453, 0.949397], normal: [0.0, 0.0, 0.0] },
+    Vertex { position: [-0.5,  0.5,  0.5], tex_coords: [0.85967, 0.84732914], normal: [0.0, 0.0, 0.0] },
+    Vertex { position: [-0.5,  0.5, -0.5], tex_coords: [0.9414737, 0.2652641], normal: [0.0, 0.0, 0.0] },
+];
+
+const INDICES: &[u16] = &[
+    1, 2, 3,
+    4, 7, 6,
+    4, 5, 1,
+    1, 5, 6,
+    6, 7, 3,
+    4, 0, 3,
+    0, 1, 3,
+    5, 4, 6,
+    0, 4, 1,
+    2, 1, 6,
+    2, 6, 3,
+    7, 4, 3
+];
