@@ -1,36 +1,34 @@
+pub mod app;
 pub mod dimensions;
 
-/// Generates a component definition with its $componentDef supporting functions and render functions.
+/// Generates a component definition with its ComponentDef supporting functions and render functions.
 /// 
 /// Example:
 /// ```rust 
 /// define_components!(
-/// $components,
+/// Components,
 /// TestApp,
-/// Draw$nodes,
+/// DrawNodes,
 /// draw_node,
 /// [
 ///     CubeModel => {
 ///         DATA => CubeModel,
-///         ADDED => |_: &mut TestApp, _: &mut $node| { println!("Added"); },
-///         UPDATE => |_: &mut TestApp, _: &mut $node| { println!("Updated"); },
+///         ADDED => |_: &mut TestApp, _: &mut Node| { println!("Added"); },
+///         UPDATE => |_: &mut TestApp, _: &mut Node| { println!("Updated"); },
 ///         RENDER => |pass: &mut wgpu::RenderPass<'a>, app: &'b TestApp, data: &'b CubeModel| {
 ///             pass.prepare_cube_engine(&app.cube_engine, &app.camera);
 ///             pass.draw_cube_model(&app.render_engine, &app.cube_engine, data);
 ///         },
-///         REMOVED => |_: &mut TestApp, _: &mut $node| { println!("Removed"); }
+///         REMOVED => |_: &mut TestApp, _: &mut Node| { println!("Removed"); }
 ///     }
 /// ]
 /// );
 /// ```
 #[macro_export]
-macro_rules! define_world {
+macro_rules! run_world {
+
     (
-        $app:ident,
-        $component:ident,
-        $node:ident,
-        $draw_name:ident,
-        $draw_fn_name:ident,
+        $app:ty,
         [$(
             $variant:ident => {
                 DATA => $data:ty,
@@ -43,11 +41,11 @@ macro_rules! define_world {
     ) => {
         use std::marker::PhantomData;
         use cgmath::{Vector3, ElementWise};
-        use forte_engine::{math::transforms::Transform, world::dimensions::Dimensions};
+        use forte_engine::{math::transforms::Transform, world::dimensions::Dimensions, EngineApp, start_render, end_render, pass, run_app};
 
         // Create full enum
         #[derive(Default, Debug)]
-        pub enum $component {
+        pub enum Component {
             #[default]
             Empty,
             $($variant($data),)*
@@ -55,52 +53,52 @@ macro_rules! define_world {
 
         // create node
         #[derive(Debug)]
-        pub struct $node {
+        pub struct Node {
             // public
             pub transform: Transform,
-            pub component: $component,
+            pub component: Component,
             pub rel_min_dimensions: Dimensions,
         
             // non-public
             global_transform: Transform,
             dimensions: Dimensions,
-            children: Vec<$node>
+            children: Vec<Node>
         }
 
         // Give node a default
-        impl Default for $node {
+        impl Default for Node {
             fn default() -> Self {
                 Self {
                     transform: Transform::default(),
                     global_transform: Transform::default(),
                     rel_min_dimensions: Dimensions::default(),
                     dimensions: Dimensions::default(),
-                    component: $component::default(),
+                    component: Component::default(),
                     children: Vec::new()
                 }
             }
         }
 
         // create node functions
-        impl $node {
+        impl Node {
             // accessor functions
             pub fn global_transform(&self) -> &Transform { &self.transform }
             pub fn rel_min_dimensions(&self) -> &Dimensions { &self.rel_min_dimensions }
             pub fn dimensions(&self) -> &Dimensions { &self.dimensions }
-            pub fn children(&self) -> &Vec<$node> { &self.children }
+            pub fn children(&self) -> &Vec<Node> { &self.children }
 
             // modification functions
-            pub fn add_child(&mut self, mut child: $node) {
+            pub fn add_child(&mut self, app: &mut $app, mut child: Node) {
                 self.children.push(child);
-                self.children.last_mut().as_mut().unwrap().call_add_recr();
+                self.children.last_mut().as_mut().unwrap().call_add_recr(app);
             }
 
-            pub fn remove_child(&mut self, idx: usize) {
-                self.children[idx].call_remove_recr();
+            pub fn remove_child(&mut self, app: &mut $app, idx: usize) {
+                self.children[idx].call_remove_recr(app);
                 self.children.remove(idx);
             }
 
-            pub fn update(&mut self, app: &TestApp, previous: &Transform) {
+            pub fn update(&mut self, app: &mut $app, previous: &Transform) {
                 // calculate new global transform
                 let global_transform = Transform {
                     position: self.transform.position + previous.position,
@@ -141,55 +139,109 @@ macro_rules! define_world {
 
                 // call component update
                 match &self.component {
-                    $component::Empty => {},
-                    $($component::$variant(data) => { $update(self) },)*
+                    Component::Empty => {},
+                    $(Component::$variant(data) => { $update(app, self) },)*
                 }
             }
 
             // calls the add functions recursively for this node and all its children
-            pub(crate) fn call_add_recr(&mut self) {
+            pub(crate) fn call_add_recr(&mut self, app: &mut $app) {
                 match &self.component {
-                    $component::Empty => {},
-                    $($component::$variant(data) => { $added(self) },)*
+                    Component::Empty => {},
+                    $(Component::$variant(data) => { $added(app, self) },)*
                 }
 
-                self.children.iter_mut().for_each(|child| child.call_add_recr());
+                self.children.iter_mut().for_each(|child| child.call_add_recr(app));
             }
 
             // calls the remove functions recursively for this node and all its children
-            pub(crate) fn call_remove_recr(&mut self) {
+            pub(crate) fn call_remove_recr(&mut self, app: &mut $app) {
                 match &self.component {
-                    $component::Empty => {},
-                    $($component::$variant(data) => { $removed(self) },)*
+                    Component::Empty => {},
+                    $(Component::$variant(data) => { $removed(app, self) },)*
                 }
 
-                self.children.iter_mut().for_each(|child| child.call_remove_recr());
+                self.children.iter_mut().for_each(|child| child.call_remove_recr(app));
             }
         }
     
         // create render trait
-        pub trait $draw_name <'a,'b> where 'b: 'a {
-            fn $draw_fn_name(
+        pub trait DrawNodes <'a,'b> where 'b: 'a {
+            fn draw_node(
                 &mut self,
                 app: &'b $app,
-                node: &'b $node
+                node: &'b Node
             );
         }
 
         // draw trait for render pass
-        impl<'a, 'b> $draw_name <'a, 'b> for wgpu::RenderPass<'a> where 'b: 'a {
-            fn $draw_fn_name(
+        impl<'a, 'b> DrawNodes <'a, 'b> for wgpu::RenderPass<'a> where 'b: 'a {
+            fn draw_node(
                 &mut self,
                 app: &'b $app,
-                node: &'b $node
+                node: &'b Node
             ) {
                 match &node.component {
-                    $component::Empty => {},
-                    $($component::$variant(data) => { $render(self, app, data) },)*
+                    Component::Empty => {},
+                    $(Component::$variant(data) => { $render(self, app, data) },)*
                 }
 
                 node.children().iter().for_each(|child| self.draw_node(app, child));
             }
         }
+
+        pub trait WorldApp {
+            fn render_engine(&self) -> &RenderEngine;
+            fn render_engine_mut(&mut self) -> &mut RenderEngine;
+
+            fn create(render_engine: RenderEngine) -> Self;
+            fn start(&mut self, root: &mut Node);
+            fn update(&mut self, root: &mut Node);
+            fn exit(&mut self, root: &mut Node);
+        }
+        
+        pub struct WorldContainer {
+            pub app: $app,
+            pub root: Node
+        }
+
+        // add an engine app so that we can run the world container as an app
+        impl EngineApp for WorldContainer {
+            // Simply create a new root node and create the above world app
+            fn create(mut engine: RenderEngine) -> Self {
+                // create app and root node
+                let mut app = <$app>::create(engine);
+                let mut root = Node::default();
+
+                // start the app
+                app.start(&mut root);
+
+                // create new world container and return
+                Self { app, root }
+            }
+
+            // Update the app, then its nodes
+            fn update(&mut self) {
+                // call updates
+                self.app.update(&mut self.root);
+                self.root.update(&mut self.app, &Transform::default());
+
+                // do render
+                let mut resources = start_render!(self.app.render_engine_mut());
+                {
+                    let mut pass = pass!(self.app.render_engine(), resources);
+                    pass.draw_node(&self.app, &self.root);
+                }
+                end_render!(self.app.render_engine_mut(), resources);
+            }
+
+            fn input(&mut self, input: forte_engine::render::input::EngineInput) {}
+            fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) { self.app.render_engine_mut().resize(new_size); }
+            fn events_cleared(&mut self) { self.app.render_engine_mut().next_frame(); }
+            fn exit(&mut self) { self.app.exit(&mut self.root); }
+        }
+
+        // run everything we just created
+        fn main() { run_app::<WorldContainer>(); }
     };
 }
