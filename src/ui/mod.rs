@@ -1,10 +1,12 @@
 use crate::render::{primitives::{vertices::Vertex, mesh::Mesh}, pipelines::Pipeline, render_engine::RenderEngine, resources::Handle};
 
-use self::{elements::canvas::UICanvas, uniforms::UIInstance};
+use self::{canvas::UICanvas, uniforms::UIInstance};
 
+pub mod canvas;
 pub mod elements;
 pub mod groups;
 pub mod uniforms;
+pub mod style;
 
 /// The vertices of a rectangle.
 const VERTICES: &[Vertex] = &[

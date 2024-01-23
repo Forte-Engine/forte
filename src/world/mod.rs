@@ -100,7 +100,7 @@ macro_rules! define_world {
                 self.children.remove(idx);
             }
 
-            pub fn update(&mut self, previous: &Transform) {
+            pub fn update(&mut self, app: &TestApp, previous: &Transform) {
                 // calculate new global transform
                 let global_transform = Transform {
                     position: self.transform.position + previous.position,
@@ -124,7 +124,7 @@ macro_rules! define_world {
 
                 // update children first, and update dimensions if/when necessary
                 self.children.iter_mut().for_each(|child| {
-                    child.update(&global_transform);
+                    child.update(app, &global_transform);
 
                     // check for dimension updates
                     if child.dimensions.from.x < dimensions.from.x { dimensions.from.x = child.dimensions.from.x; }

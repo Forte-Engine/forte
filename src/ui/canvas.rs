@@ -2,6 +2,7 @@ use wgpu::util::DeviceExt;
 
 use crate::{render::render_engine::RenderEngine, ui::uniforms::UIInstance};
 
+#[derive(Debug)]
 pub struct UICanvas {
     pub(crate) buffer: wgpu::Buffer,
     pub(crate) cur_size: usize

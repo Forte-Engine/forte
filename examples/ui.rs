@@ -1,40 +1,66 @@
-use forte_engine::{*, math::transforms::Transform, render::{primitives::transforms::TransformRaw, render_engine::RenderEngine}, ui::{elements::canvas::UICanvas, uniforms::UIInstance, DrawUI, UIEngine}, EngineApp};
+use forte_engine::{*, render::{primitives::transforms::TransformRaw, render_engine::RenderEngine}, ui::{canvas::UICanvas, elements::{ElementInfo, UIElement}, style::Style, uniforms::UIInstance, DrawUI, UIEngine}, EngineApp};
+
+define_world!(
+    TestApp, 
+    Component, 
+    Node,
+    DrawNode, 
+    draw_node,
+    [
+        Canvas => {
+            DATA => UICanvas,
+            ADDED => |_: &mut Node| {},
+            UPDATE => |_: &mut Node| {},
+            RENDER => |pass: &mut wgpu::RenderPass<'a>, app: &'b TestApp, data: &'b UICanvas| {
+                pass.prepare_ui(&app.ui_engine);
+                pass.draw_canvas(&app.render_engine, &app.ui_engine, &data);
+            },
+            REMOVED => |_: &mut Node| {}
+        },
+        UI => {
+            DATA => UIElement,
+            ADDED => |_: &mut Node| {},
+            UPDATE => |_: &mut Node| {},
+            RENDER => |pass: &mut wgpu::RenderPass<'a>, app: &'b TestApp, data: &'b UIElement| {},
+            REMOVED => |_: &mut Node| {}
+        }
+    ]
+);
+
+define_ui_functions!(Node, Component);
 
 pub struct TestApp {
     render_engine: RenderEngine,
     ui_engine: UIEngine,
-    canvas: UICanvas
+    root: Node
 }
 
 impl EngineApp for TestApp {
     fn create(mut render_engine: RenderEngine) -> Self {
-        let mut transform = Transform::default();
-        transform.scale *= 0.5;
-        let transform_raw = TransformRaw::from_generic(&transform);
-
         // create render engine
         let ui_engine = UIEngine::new(&mut render_engine);
 
         // create canvas
-        let canvas = UICanvas::new_with_contents(&render_engine, &[UIInstance(transform_raw.model)]);
+        let mut root = Node::default();
+        root.component = Component::Canvas(UICanvas::new(&render_engine));
+        let mut rect = Node::default();
+        rect.component = Component::UI(UIElement { style: Style::default(), info: ElementInfo::Container });
 
         // create new self
         Self {
             render_engine,
             ui_engine,
-            canvas
+            root
         }
     }
 
     fn update(&mut self) {
+        // draw
         let mut resources = start_render!(self.render_engine);
-
         {
             let mut pass = pass!(self.render_engine, resources);
-            pass.prepare_ui(&self.ui_engine);
-            pass.draw_canvas(&self.render_engine, &self.ui_engine, &self.canvas);
+            pass.draw_node(&self, &self.root);
         }
-
         end_render!(self.render_engine, resources);
     }
 
