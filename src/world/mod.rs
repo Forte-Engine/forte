@@ -1,16 +1,15 @@
 pub mod app;
 pub mod dimensions;
 
-/// Generates a component definition with its ComponentDef supporting functions and render functions.
+/// Generates `Node` struct and Components enum from the given input.
+/// Then takes the given struct that implements `WorldApp`, creates it and uses it
+/// when starting and running the game loop.
 /// 
 /// Example:
 /// ```rust 
-/// define_components!(
-/// Components,
-/// TestApp,
-/// DrawNodes,
-/// draw_node,
-/// [
+/// run_world!(
+///  TestApp,
+///  [
 ///     CubeModel => {
 ///         DATA => CubeModel,
 ///         ADDED => |_: &mut TestApp, _: &mut Node| { println!("Added"); },
@@ -21,7 +20,7 @@ pub mod dimensions;
 ///         },
 ///         REMOVED => |_: &mut TestApp, _: &mut Node| { println!("Removed"); }
 ///     }
-/// ]
+///  ]
 /// );
 /// ```
 #[macro_export]
