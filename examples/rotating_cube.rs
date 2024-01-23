@@ -1,5 +1,5 @@
 use cgmath::{Rotation3, Quaternion};
-use forte_engine::{end_render, math::transforms::Transform, pass, render::{primitives::{vertices::Vertex, mesh::Mesh, cameras::{CameraController, Camera}, transforms::TransformRaw}, pipelines::Pipeline, resources::Handle, textures::textures::Texture, render_engine::*, input::EngineInput, render_utils}, run_app, start_render, EngineApp};
+use forte_engine::{end_render, math::transforms::Transform, pass, render::{primitives::{vertices::Vertex, mesh::Mesh, cameras::{CameraController, Camera}, transforms::TransformRaw}, pipelines::Pipeline, resources::Handle, textures::textures::Texture, render_engine::*, input::EngineInput}, run_app, start_render, EngineApp};
 use wgpu::util::DeviceExt;
 
 const VERTICES: &[Vertex] = &[
@@ -111,18 +111,17 @@ impl EngineApp for MainApp {
         // start render and get resources
         let mut resources = start_render!(self.render_engine);
 
-        // create rener pass
         {
-            let mut pass = pass!(
-                self.render_engine, 
-                resources
-            );
+            // create render pass
+            let mut pass = pass!(self.render_engine, resources);
 
+            // update rotation
             let transform = self.instances.get_mut(0).unwrap();
             transform.rotation = Quaternion::from_angle_y(cgmath::Deg(self.render_engine.time_since_start * 45.0)) * Quaternion::from_angle_z(cgmath::Deg(self.render_engine.time_since_start * 45.0));
             let instance_data = self.instances.iter().map(TransformRaw::from_generic).collect::<Vec<_>>();
             self.render_engine.queue.write_buffer(&self.instance_buffer, 0, bytemuck::cast_slice(&instance_data));
 
+            // draw
             pass.prepare_draw(&self.pipeline, &self.camera);
             pass.draw_mesh(&self.render_engine, &self.mesh, &self.texture, &self.instance_buffer, self.instances.len() as u32);
         }

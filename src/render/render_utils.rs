@@ -77,6 +77,7 @@ pub fn finalize_render(
 macro_rules! start_render {
     ($engine: expr) => {
         {
+            use forte_engine::render::render_utils;
             let resources = render_utils::prepare_render(&$engine);
             let mut resources = if resources.is_ok() { resources.unwrap() } else { return };
             resources
@@ -88,6 +89,7 @@ macro_rules! start_render {
 #[macro_export]
 macro_rules! end_render {
     ($engine: expr, $resources: expr) => {
+        use forte_engine::render::render_utils;
         render_utils::finalize_render(&mut $engine, $resources);
     };
 }
@@ -107,6 +109,7 @@ macro_rules! pass {
 
     ($engine: expr, $resources: expr, $color: expr) => {
         {
+            use forte_engine::render::render_utils;
             let color_attachment = wgpu::RenderPassColorAttachment {
                 view: &$resources.view,
                 resolve_target: None,
