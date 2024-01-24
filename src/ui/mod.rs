@@ -10,10 +10,10 @@ pub mod style;
 
 /// The vertices of a rectangle.
 const VERTICES: &[Vertex] = &[
-    Vertex { position: [ 0.0, 0.0, 0.0 ], tex_coords: [ 0.0, 0.0 ], normal: [0.0, 0.0, 0.0] },
-    Vertex { position: [ 1.0, 0.0, 0.0 ], tex_coords: [ 1.0, 0.0 ], normal: [0.0, 0.0, 0.0] },
-    Vertex { position: [ 0.0, 1.0, 0.0 ], tex_coords: [ 0.0, 1.0 ], normal: [0.0, 0.0, 0.0] },
-    Vertex { position: [ 1.0, 1.0, 0.0 ], tex_coords: [ 1.0, 1.0 ], normal: [0.0, 0.0, 0.0] }
+    Vertex { position: [ -1.0, -1.0, 0.0 ], tex_coords: [ 0.0, 0.0 ], normal: [0.0, 0.0, 0.0] },
+    Vertex { position: [  1.0, -1.0, 0.0 ], tex_coords: [ 1.0, 0.0 ], normal: [0.0, 0.0, 0.0] },
+    Vertex { position: [ -1.0,  1.0, 0.0 ], tex_coords: [ 0.0, 1.0 ], normal: [0.0, 0.0, 0.0] },
+    Vertex { position: [  1.0,  1.0, 0.0 ], tex_coords: [ 1.0, 1.0 ], normal: [0.0, 0.0, 0.0] }
 ];
 
 /// The indices of a rectangle.
@@ -79,6 +79,6 @@ impl<'a, 'b> DrawUI<'a, 'b> for wgpu::RenderPass<'a> where 'b: 'a {
         self.set_vertex_buffer(0, mesh.vertex_buf.slice(..));
         self.set_vertex_buffer(1, canvas.buffer.slice(..));
         self.set_index_buffer(mesh.index_buf.slice(..), wgpu::IndexFormat::Uint16);
-        self.draw(0 .. mesh.num_vertices, 0 .. canvas.cur_size as u32);
+        self.draw_indexed(0 .. mesh.num_indices, 0, 0 .. canvas.cur_size as u32);
     }
 }
