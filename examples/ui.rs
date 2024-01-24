@@ -1,70 +1,40 @@
-// use forte_engine::{*, render::{primitives::transforms::TransformRaw, render_engine::RenderEngine}, ui::{canvas::UICanvas, elements::{ElementInfo, UIElement}, style::Style, uniforms::UIInstance, DrawUI, UIEngine}, EngineApp};
+use forte_engine::{render::render_engine::RenderEngine, run_world, ui::{canvas::UICanvas, elements::UIElement, DrawUI, UIEngine}};
 
-// define_world!(
-//     TestApp, 
-//     [
-//         Canvas => {
-//             DATA => UICanvas,
-//             ADDED => |_: &mut Node| {},
-//             UPDATE => |_: &mut Node| {},
-//             RENDER => |pass: &mut wgpu::RenderPass<'a>, app: &'b TestApp, data: &'b UICanvas| {
-//                 pass.prepare_ui(&app.ui_engine);
-//                 pass.draw_canvas(&app.render_engine, &app.ui_engine, &data);
-//             },
-//             REMOVED => |_: &mut Node| {}
-//         },
-//         UI => {
-//             DATA => UIElement,
-//             ADDED => |_: &mut Node| {},
-//             UPDATE => |_: &mut Node| {},
-//             RENDER => |pass: &mut wgpu::RenderPass<'a>, app: &'b TestApp, data: &'b UIElement| {},
-//             REMOVED => |_: &mut Node| {}
-//         }
-//     ]
-// );
+run_world!(
+    TestWorldApp,
+    [
+        Canvas => {
+            DATA => UICanvas,
+            ADDED => |_: &mut TestWorldApp, _: &mut Node| {},
+            UPDATE => |_: &mut TestWorldApp, _: &mut Node| {},
+            RENDER => |pass: &mut wgpu::RenderPass<'a>, app: &'b TestWorldApp, data: &'b UICanvas| { pass.draw_canvas(app.render_engine(), &app.ui_engine, data); },
+            REMOVED => |_: &mut TestWorldApp, _: &mut Node| {}
+        },
+        Ui => {
+            DATA => UIElement,
+            ADDED => |_: &mut TestWorldApp, _: &mut Node| {},
+            UPDATE => |_: &mut TestWorldApp, _: &mut Node| {},
+            RENDER => |_: &mut wgpu::RenderPass<'a>, _: &'b TestWorldApp, _: &'b UIElement| {},
+            REMOVED => |_: &mut TestWorldApp, _: &mut Node| {}
+        }
+    ]
+);
 
-// define_ui_functions!(Node, Component);
+pub struct TestWorldApp {
+    render_engine: RenderEngine,
+    ui_engine: UIEngine
+}
 
-// pub struct TestApp {
-//     render_engine: RenderEngine,
-//     ui_engine: UIEngine,
-//     root: Node
-// }
+impl WorldApp for TestWorldApp {
+    fn render_engine(&self) ->  &RenderEngine { &self.render_engine }
+    fn render_engine_mut(&mut self) ->  &mut RenderEngine { &mut self.render_engine }
 
-// impl EngineApp for TestApp {
-//     fn create(mut render_engine: RenderEngine) -> Self {
-//         // create render engine
-//         let ui_engine = UIEngine::new(&mut render_engine);
+    fn create(mut render_engine: RenderEngine) -> Self {
+        let ui_engine = UIEngine::new(&mut render_engine);
+        Self { render_engine, ui_engine }
+    }
 
-//         // create canvas
-//         let mut root = Node::default();
-//         root.component = Component::Canvas(UICanvas::new(&render_engine));
-//         let mut rect = Node::default();
-//         rect.component = Component::UI(UIElement { style: Style::default(), info: ElementInfo::Container });
-
-//         // create new self
-//         Self {
-//             render_engine,
-//             ui_engine,
-//             root
-//         }
-//     }
-
-//     fn update(&mut self) {
-//         // draw
-//         let mut resources = start_render!(self.render_engine);
-//         {
-//             let mut pass = pass!(self.render_engine, resources);
-//             pass.draw_node(&self, &self.root);
-//         }
-//         end_render!(self.render_engine, resources);
-//     }
-
-//     fn input(&mut self, _input: forte_engine::render::input::EngineInput) {}
-//     fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) { self.render_engine.resize(new_size); }
-//     fn events_cleared(&mut self) { self.render_engine.next_frame(); }
-//     fn exit(&mut self) {}
-// }
-
-// fn main() { run_app::<TestApp>() }
-fn main() {}
+    fn start(&mut self, _root: &mut Node) {}
+    fn update(&mut self, _root: &mut Node) {}
+    fn exit(&mut self, _root: &mut Node) {}
+}

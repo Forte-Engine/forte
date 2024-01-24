@@ -12,6 +12,15 @@ pub struct Style {
     pub height: Sizing,
 }
 
+impl Style {
+    pub fn min_size(&self, display_size: &Vector2<f32>) -> Vector2<f32> {
+        Vector2 { 
+            x: self.width.size(display_size), 
+            y: self.height.size(display_size) 
+        }
+    }
+}
+
 #[derive(Default, Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct Color { red: f32, green: f32, blue: f32 }
 
@@ -32,9 +41,9 @@ pub enum Sizing {
 }
 
 impl Sizing {
-    pub fn size(&self, dimensions: &Vector2<f32>, default: f32) -> f32 {
+    pub fn size(&self, dimensions: &Vector2<f32>) -> f32 {
         match self {
-            Sizing::Auto => default,
+            Sizing::Auto => 0.0,
             Sizing::Px(px) => *px,
             Sizing::PercentWidth(percent) => dimensions.x * percent,
             Sizing::PercentHeight(percent) => dimensions.y * percent,
