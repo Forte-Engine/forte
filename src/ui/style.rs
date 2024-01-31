@@ -1,4 +1,4 @@
-use cgmath::Vector2;
+use cgmath::{Vector2, Vector4};
 
 #[derive(Default, Debug, Clone)]
 pub struct Style {
@@ -22,7 +22,12 @@ impl Style {
 }
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct Color { red: f32, green: f32, blue: f32 }
+pub struct Color { pub red: f32, pub green: f32, pub blue: f32, pub alpha: f32 }
+
+impl Color {
+    pub fn to_vec4(&self) -> Vector4<f32> { Vector4 { x: self.red, y: self.green, z: self.blue, w: self.alpha } }
+    pub fn to_array(&self) -> [f32; 4] { [self.red, self.green, self.blue, self.alpha] }
+}
 
 #[derive(Default, Debug, Clone, Copy)]
 pub enum Position { 

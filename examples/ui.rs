@@ -1,5 +1,5 @@
 use cgmath::{Quaternion, Vector2, Zero};
-use forte_engine::{render::{primitives::transforms::TransformRaw, render_engine::RenderEngine}, run_world, ui::{canvas::UICanvas, elements::{ElementInfo, UIElement}, style::{Sizing, Style}, uniforms::UIInstance, DrawUI, UIEngine}};
+use forte_engine::{render::{primitives::transforms::TransformRaw, render_engine::RenderEngine}, run_world, ui::{canvas::UICanvas, elements::{ElementInfo, UIElement}, style::{Color, Position, Sizing, Style}, uniforms::UIInstance, DrawUI, UIEngine}};
 
 run_world!(
     TestWorldApp,
@@ -42,6 +42,7 @@ run_world!(
     ]
 );
 
+#[derive(Debug)]
 pub struct UIRenderInfo {
     pub position: Vector2<f32>,
     pub size: Vector2<f32>,
@@ -53,8 +54,7 @@ pub fn render_ui(node: &Node, contents: &mut Vec<UIInstance>, info: &UIRenderInf
         match &child.component {
             Component::Ui(element) => {
                 // calculate size and position of this element
-                let size = calculate_size(child, &info.display_size);
-                let position = calculate_position(element, info, &size);
+                let (position, size) = calculate_position_size(child, info);
                 let new_info = UIRenderInfo { position, size, display_size: info.display_size };
 
                 // generate transform of UI
@@ -72,41 +72,91 @@ pub fn render_ui(node: &Node, contents: &mut Vec<UIInstance>, info: &UIRenderInf
                     }
                 };
 
-                // save instance
-                let instance = UIInstance(TransformRaw::from_generic(&transform).model);
-                contents.push(instance);
-
                 // render next elements
                 render_ui(child, contents, &new_info);
+
+                // save instance
+                let raw_transform = TransformRaw::from_generic(&transform).model;
+                let instance = UIInstance([
+                    raw_transform[0],
+                    raw_transform[1],
+                    raw_transform[2],
+                    raw_transform[3],
+                    element.style.color.to_array(),
+                ]);
+                contents.push(instance);
             },
             _ => {}
         }
     });
 }
 
-pub fn calculate_position(_: &UIElement, info: &UIRenderInfo, size: &Vector2<f32>) -> Vector2<f32> {
-    return Vector2 { 
-        x: info.position.x + ((info.size.x - size.x) * 0.5), 
-        y: info.position.y + ((info.size.y - size.y) * 0.5)
-    }
-}
-
-pub fn calculate_size(node: &Node, display_size: &Vector2<f32>) -> Vector2<f32> {
+// calculates the position and size of the given element by taking in its own node and some render info about its parent and display size
+pub fn calculate_position_size(node: &Node, info: &UIRenderInfo) -> (Vector2<f32>, Vector2<f32>) {
     match &node.component {
         Component::Ui(element) => {
             // calculate my size
-            let mut size = element.min_size(display_size);
+            let size = element.min_size(&info.display_size);
 
-            // make sure our size is contains the inside dimensions
-            node.children.iter().for_each(|child| {
-                let child = calculate_size(child, display_size);
-                if size.x < child.x { size.x = child.x; }
-                if size.y < child.y { size.y = child.y; }
-            });
+            // calculate initial position
+            let mut position =  Vector2 { 
+                x: info.position.x + ((info.size.x - size.x) * 0.5), 
+                y: info.position.y + ((info.size.y - size.y) * 0.5)
+            };
+        
+            // if left positioning given, position based on above info, an offset, and the positioning type
+            if !matches!(element.style.left, Sizing::Auto) {
+                let offset = element.style.left.size(&info.display_size);
+                match element.style.position {
+                    Position::Parent => {
+                        position.x = info.position.x + offset;
+                    },
+                    Position::Absolute => {
+                        position.x = offset;
+                    }
+                }
+            } 
+            // otherwise, do the same for the right
+            else if !matches!(element.style.right, Sizing::Auto) {
+                let offset = element.style.right.size(&info.display_size);
+                match element.style.position {
+                    Position::Parent => {
+                        position.x = info.position.x + info.size.x - size.x - offset;
+                    },
+                    Position::Absolute => {
+                        position.x = info.display_size.x - size.x - offset;
+                    }
+                }
+            }
 
-            size
+            // do top bottom positioning
+            if !matches!(element.style.top, Sizing::Auto) {
+                let offset = element.style.top.size(&info.display_size);
+                match element.style.position {
+                    Position::Parent => {
+                        position.y = info.position.y + info.size.y - size.y - offset;
+                    },
+                    Position::Absolute => {
+                        position.y = info.display_size.y - size.y - offset;
+                    }
+                }
+            } else if !matches!(element.style.bottom, Sizing::Auto) {
+                let offset = element.style.bottom.size(&info.display_size);
+                position.y = offset;
+                match element.style.position {
+                    Position::Parent => {
+                        position.y = info.position.y + offset;
+                    },
+                    Position::Absolute => {
+                        position.y = offset;
+                    }
+                }
+            }
+
+            (position, size)
         },
-        _ => Vector2::zero()
+        _ => (Vector2::zero(), Vector2::zero()
+    )
     }
 }
 
@@ -132,13 +182,32 @@ impl WorldApp for TestWorldApp {
                     component: Component::Ui(
                         UIElement { 
                             style: Style { 
-                                width: Sizing::Px(100.0), 
-                                height: Sizing::Px(100.0), 
+                                width: Sizing::Px(200.0), 
+                                height: Sizing::Px(200.0), 
+                                color: Color { red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0 },
                                 ..Default::default() 
                             }, 
                             info: ElementInfo::Container 
                         }
                     ),
+                    children: vec![
+                        Node {
+                            component: Component::Ui(
+                                UIElement {
+                                    style: Style {
+                                        width: Sizing::Px(100.0), 
+                                        height: Sizing::Px(100.0), 
+                                        position: Position::Parent,
+                                        right: Sizing::Px(10.0),
+                                        color: Color { red: 0.0, green: 0.0, blue: 1.0, alpha: 1.0 },
+                                        ..Default::default() 
+                                    }, 
+                                    info: ElementInfo::Container 
+                                }
+                            ),
+                            ..Default::default()
+                        }
+                    ],
                     ..Default::default()
                 }
             ],
