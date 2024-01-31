@@ -86,6 +86,12 @@ pub fn render_ui(node: &Node, contents: &mut Vec<UIInstance>, info: &UIRenderInf
                         element.style.corner_rounds.top_right.size(&info.display_size) / f32::max(size.x, size.y),
                         element.style.corner_rounds.bottom_left.size(&info.display_size) / f32::max(size.x, size.y),
                         element.style.corner_rounds.bottom_right.size(&info.display_size) / f32::max(size.x, size.y),
+                    ],
+                    [
+                        element.style.border.top.size(&info.display_size) / f32::max(size.x, size.y),
+                        element.style.border.bottom.size(&info.display_size) / f32::max(size.x, size.y),
+                        element.style.border.left.size(&info.display_size) / f32::max(size.x, size.y),
+                        element.style.border.right.size(&info.display_size) / f32::max(size.x, size.y),
                     ]
                 ]);
                 contents.push(instance);
@@ -192,6 +198,18 @@ impl WorldApp for TestWorldApp {
                                 width: Sizing::Px(200.0), 
                                 height: Sizing::Px(200.0), 
                                 color: Color { red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0 },
+                                border: SizingRect {
+                                    top: Sizing::Px(15.0),
+                                    bottom: Sizing::Px(15.0),
+                                    left: Sizing::Px(15.0),
+                                    right: Sizing::Px(15.0)
+                                },
+                                corner_rounds: CornerRounds {
+                                    top_left: Sizing::Px(15.0),
+                                    top_right: Sizing::Px(15.0),
+                                    bottom_left: Sizing::Px(15.0),
+                                    bottom_right: Sizing::Px(15.0)
+                                },
                                 ..Default::default() 
                             }, 
                             info: ElementInfo::Container 
@@ -214,8 +232,7 @@ impl WorldApp for TestWorldApp {
                                             top_left: Sizing::Px(15.0),
                                             top_right: Sizing::Px(15.0),
                                             bottom_left: Sizing::Px(15.0),
-                                            bottom_right: Sizing::Px(15.0),
-                                            ..Default::default()
+                                            bottom_right: Sizing::Px(15.0)
                                         },
                                         color: Color { red: 0.0, green: 0.0, blue: 1.0, alpha: 1.0 },
                                         ..Default::default() 

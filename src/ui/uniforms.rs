@@ -1,6 +1,6 @@
 #[repr(C)]
 #[derive(Clone, Copy, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct UIInstance(pub [[f32; 4]; 6]);
+pub struct UIInstance(pub [[f32; 4]; 7]);
 
 impl UIInstance {
     pub fn desc() -> wgpu::VertexBufferLayout<'static> {
@@ -44,6 +44,11 @@ impl UIInstance {
                 wgpu::VertexAttribute {
                     offset: mem::size_of::<[f32; 20]>() as wgpu::BufferAddress,
                     shader_location: 10,
+                    format: wgpu::VertexFormat::Float32x4,
+                },
+                wgpu::VertexAttribute {
+                    offset: mem::size_of::<[f32; 24]>() as wgpu::BufferAddress,
+                    shader_location: 11,
                     format: wgpu::VertexFormat::Float32x4,
                 }
             ],

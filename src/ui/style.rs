@@ -5,6 +5,7 @@ pub struct Style {
     pub position_setting: PositionSetting,
     pub color: Color,
     pub position: SizingRect,
+    pub border: SizingRect,
     pub corner_rounds: CornerRounds,
     pub width: Sizing,
     pub height: Sizing,
