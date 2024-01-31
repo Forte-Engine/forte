@@ -13,6 +13,7 @@ pub struct Style {
     pub round: Sizing,
     pub width: Sizing,
     pub height: Sizing,
+    pub rotation: f32
 }
 
 impl Style {

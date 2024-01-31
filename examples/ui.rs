@@ -1,5 +1,5 @@
 use cgmath::{Quaternion, Vector2, Zero};
-use forte_engine::{render::{primitives::transforms::TransformRaw, render_engine::RenderEngine}, run_world, ui::{canvas::UICanvas, elements::{ElementInfo, UIElement}, style::{Color, PositionSetting, Sizing, Style}, uniforms::UIInstance, DrawUI, UIEngine}};
+use forte_engine::{math::quaternion::QuaternionExt, render::{primitives::transforms::TransformRaw, render_engine::RenderEngine}, run_world, ui::{canvas::UICanvas, elements::{ElementInfo, UIElement}, style::{Color, PositionSetting, Sizing, Style}, uniforms::UIInstance, DrawUI, UIEngine}};
 
 run_world!(
     TestWorldApp,
@@ -64,7 +64,7 @@ pub fn render_ui(node: &Node, contents: &mut Vec<UIInstance>, info: &UIRenderInf
                         y: 2.0 * ((position.y + (size.y * 0.5)) / info.display_size.y) - 1.0,
                         z: layer
                     },
-                    rotation: Quaternion::new(0.0, 0.0, 0.0, 1.0),
+                    rotation: Quaternion::euler_deg_z(element.style.rotation),
                     scale: Vector3 {
                         x: size.x / info.display_size.x,
                         y: size.y / info.display_size.y,
