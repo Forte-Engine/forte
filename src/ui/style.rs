@@ -4,6 +4,7 @@ use cgmath::{Vector2, Vector4};
 pub struct Style {
     pub position_setting: PositionSetting,
     pub color: Color,
+    pub border_color: Color,
     pub left: Sizing,
     pub right: Sizing,
     pub top: Sizing,
@@ -28,12 +29,23 @@ impl Style {
     pub fn bottom_set(&self) -> bool { self.bottom.is_set() }
 }
 
-#[derive(Default, Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct Color { pub red: f32, pub green: f32, pub blue: f32, pub alpha: f32 }
 
 impl Color {
     pub fn to_vec4(&self) -> Vector4<f32> { Vector4 { x: self.red, y: self.green, z: self.blue, w: self.alpha } }
     pub fn to_array(&self) -> [f32; 4] { [self.red, self.green, self.blue, self.alpha] }
+}
+
+impl Default for Color {
+    fn default() -> Self {
+        Self {
+            red: 1.0,
+            green: 1.0,
+            blue: 1.0,
+            alpha: 1.0
+        }
+    }
 }
 
 #[derive(Default, Debug, Clone, Copy)]

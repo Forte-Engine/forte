@@ -10,15 +10,17 @@ struct InstanceInput {
     @location(7) model_matrix_2: vec4<f32>,
     @location(8) model_matrix_3: vec4<f32>,
     @location(9) color: vec4<f32>,
-    @location(10) extra: vec4<f32>
+    @location(10) border_color: vec4<f32>,
+    @location(11) extra: vec4<f32>
 }
 
 struct VertexOutput {
     @builtin(position) clip_position: vec4<f32>,
     @location(0) tex_coords: vec2<f32>,
     @location(1) color: vec4<f32>,
-    @location(2) round: f32,
-    @location(3) border: f32
+    @location(2) border_color: vec4<f32>,
+    @location(3) round: f32,
+    @location(4) border: f32
 }
 
 @vertex
@@ -39,6 +41,7 @@ fn vs_main(
     out.tex_coords = model.tex_coords;
     out.clip_position = model_matrix * vec4<f32>(model.position, 1.0);
     out.color = instance.color;
+    out.border_color = instance.border_color;
     out.round = instance.extra.x;
     out.border = instance.extra.y;
     return out;
@@ -76,10 +79,10 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let max_dist = max(in.border, in.round);
     let border_ratio = min(in.border / max_dist, 0.99);
     let dist = dist_to_edge(in.tex_coords, vec2<f32>(1.0, 1.0), max_dist);
-    if (dist <= 0.1) { return vec4<f32>(1.0) * smoothstep(0.0, 0.1, dist); }
-    else if (dist <= border_ratio - 0.1) { return vec4<f32>(1.0); }
+    if (dist <= 0.1) { return in.border_color * smoothstep(0.0, 0.1, dist); }
+    else if (dist <= border_ratio - 0.1) { return in.border_color; }
     else if (dist <= border_ratio) { 
         let step = smoothstep(border_ratio - 0.1, border_ratio, dist);
-        return (in.color * step) + (vec4<f32>(1.0) * (1.0 - step));
+        return (in.color * step) + (in.border_color * (1.0 - step));
     } else { return vec4<f32>(in.color); }
 }

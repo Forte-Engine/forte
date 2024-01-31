@@ -80,6 +80,7 @@ pub fn render_ui(node: &Node, contents: &mut Vec<UIInstance>, info: &UIRenderInf
                     raw_transform[2],
                     raw_transform[3],
                     element.style.color.to_array(),
+                    element.style.border_color.to_array(),
                     [
                         element.style.round.size(&info.display_size) / f32::max(size.x, size.y),
                         element.style.border.size(&info.display_size) / f32::max(size.x, size.y),
