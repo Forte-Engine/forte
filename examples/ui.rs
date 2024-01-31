@@ -1,5 +1,5 @@
 use cgmath::{Quaternion, Vector2, Zero};
-use forte_engine::{render::{primitives::transforms::TransformRaw, render_engine::RenderEngine}, run_world, ui::{canvas::UICanvas, elements::{ElementInfo, UIElement}, style::{Color, Position, Sizing, Style}, uniforms::UIInstance, DrawUI, UIEngine}};
+use forte_engine::{render::{primitives::transforms::TransformRaw, render_engine::RenderEngine}, run_world, ui::{canvas::UICanvas, elements::{ElementInfo, UIElement}, style::{Color, CornerRounds, PositionSetting, Sizing, SizingRect, Style}, uniforms::UIInstance, DrawUI, UIEngine}};
 
 run_world!(
     TestWorldApp,
@@ -14,7 +14,7 @@ run_world!(
                 let mut contents = Vec::<UIInstance>::new();
 
                 // render
-                render_ui(node, &mut contents, &UIRenderInfo { position: Vector2::zero(), size, display_size: size });
+                render_ui(node, &mut contents, &UIRenderInfo { position: Vector2::zero(), size, display_size: size }, 0.5);
 
                 // update canvas with contents
                 match &mut node.component {
@@ -49,7 +49,7 @@ pub struct UIRenderInfo {
     pub display_size: Vector2<f32>
 }
 
-pub fn render_ui(node: &Node, contents: &mut Vec<UIInstance>, info: &UIRenderInfo) {
+pub fn render_ui(node: &Node, contents: &mut Vec<UIInstance>, info: &UIRenderInfo, layer: f32) {
     node.children.iter().for_each(|child| {
         match &child.component {
             Component::Ui(element) => {
@@ -62,7 +62,7 @@ pub fn render_ui(node: &Node, contents: &mut Vec<UIInstance>, info: &UIRenderInf
                     position: Vector3 { 
                         x: 2.0 * ((position.x + (size.x * 0.5)) / info.display_size.x) - 1.0,
                         y: 2.0 * ((position.y + (size.y * 0.5)) / info.display_size.y) - 1.0,
-                        z: 0.0
+                        z: layer
                     },
                     rotation: Quaternion::new(0.0, 0.0, 0.0, 1.0),
                     scale: Vector3 {
@@ -72,10 +72,8 @@ pub fn render_ui(node: &Node, contents: &mut Vec<UIInstance>, info: &UIRenderInf
                     }
                 };
 
-                // render next elements
-                render_ui(child, contents, &new_info);
-
                 // save instance
+                println!("Top left: {:?}", element.style.corner_rounds.top_left.size(&info.display_size));
                 let raw_transform = TransformRaw::from_generic(&transform).model;
                 let instance = UIInstance([
                     raw_transform[0],
@@ -83,8 +81,17 @@ pub fn render_ui(node: &Node, contents: &mut Vec<UIInstance>, info: &UIRenderInf
                     raw_transform[2],
                     raw_transform[3],
                     element.style.color.to_array(),
+                    [
+                        element.style.corner_rounds.top_left.size(&info.display_size) / f32::max(size.x, size.y),
+                        element.style.corner_rounds.top_right.size(&info.display_size) / f32::max(size.x, size.y),
+                        element.style.corner_rounds.bottom_left.size(&info.display_size) / f32::max(size.x, size.y),
+                        element.style.corner_rounds.bottom_right.size(&info.display_size) / f32::max(size.x, size.y),
+                    ]
                 ]);
                 contents.push(instance);
+
+                // render next elements
+                render_ui(child, contents, &new_info, layer - 0.05);
             },
             _ => {}
         }
@@ -105,49 +112,49 @@ pub fn calculate_position_size(node: &Node, info: &UIRenderInfo) -> (Vector2<f32
             };
         
             // if left positioning given, position based on above info, an offset, and the positioning type
-            if !matches!(element.style.left, Sizing::Auto) {
-                let offset = element.style.left.size(&info.display_size);
-                match element.style.position {
-                    Position::Parent => {
+            if element.style.position.left_set() {
+                let offset = element.style.position.left.size(&info.display_size);
+                match element.style.position_setting {
+                    PositionSetting::Parent => {
                         position.x = info.position.x + offset;
                     },
-                    Position::Absolute => {
+                    PositionSetting::Absolute => {
                         position.x = offset;
                     }
                 }
             } 
             // otherwise, do the same for the right
-            else if !matches!(element.style.right, Sizing::Auto) {
-                let offset = element.style.right.size(&info.display_size);
-                match element.style.position {
-                    Position::Parent => {
+            else if element.style.position.right_set() {
+                let offset = element.style.position.right.size(&info.display_size);
+                match element.style.position_setting {
+                    PositionSetting::Parent => {
                         position.x = info.position.x + info.size.x - size.x - offset;
                     },
-                    Position::Absolute => {
+                    PositionSetting::Absolute => {
                         position.x = info.display_size.x - size.x - offset;
                     }
                 }
             }
 
             // do top bottom positioning
-            if !matches!(element.style.top, Sizing::Auto) {
-                let offset = element.style.top.size(&info.display_size);
-                match element.style.position {
-                    Position::Parent => {
+            if element.style.position.top_set() {
+                let offset = element.style.position.top.size(&info.display_size);
+                match element.style.position_setting {
+                    PositionSetting::Parent => {
                         position.y = info.position.y + info.size.y - size.y - offset;
                     },
-                    Position::Absolute => {
+                    PositionSetting::Absolute => {
                         position.y = info.display_size.y - size.y - offset;
                     }
                 }
-            } else if !matches!(element.style.bottom, Sizing::Auto) {
-                let offset = element.style.bottom.size(&info.display_size);
+            } else if element.style.position.bottom_set() {
+                let offset = element.style.position.bottom.size(&info.display_size);
                 position.y = offset;
-                match element.style.position {
-                    Position::Parent => {
+                match element.style.position_setting {
+                    PositionSetting::Parent => {
                         position.y = info.position.y + offset;
                     },
-                    Position::Absolute => {
+                    PositionSetting::Absolute => {
                         position.y = offset;
                     }
                 }
@@ -197,8 +204,19 @@ impl WorldApp for TestWorldApp {
                                     style: Style {
                                         width: Sizing::Px(100.0), 
                                         height: Sizing::Px(100.0), 
-                                        position: Position::Parent,
-                                        right: Sizing::Px(10.0),
+                                        position_setting: PositionSetting::Parent,
+                                        position: SizingRect {
+                                            top: Sizing::Px(10.0),
+                                            left: Sizing::Px(10.0),
+                                            ..Default::default()
+                                        },
+                                        corner_rounds: CornerRounds {
+                                            top_left: Sizing::Px(15.0),
+                                            top_right: Sizing::Px(15.0),
+                                            bottom_left: Sizing::Px(15.0),
+                                            bottom_right: Sizing::Px(15.0),
+                                            ..Default::default()
+                                        },
                                         color: Color { red: 0.0, green: 0.0, blue: 1.0, alpha: 1.0 },
                                         ..Default::default() 
                                     }, 
