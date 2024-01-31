@@ -1,5 +1,6 @@
 use cgmath::{Quaternion, Vector2, Zero};
-use forte_engine::{math::quaternion::QuaternionExt, render::{primitives::transforms::TransformRaw, render_engine::RenderEngine}, run_world, ui::{canvas::UICanvas, elements::{ElementInfo, UIElement}, style::{Color, PositionSetting, Sizing, Style}, uniforms::UIInstance, DrawUI, UIEngine}};
+use forte_engine::{math::quaternion::QuaternionExt, render::{primitives::transforms::TransformRaw, render_engine::RenderEngine, resources::Handle, textures::textures::Texture}, run_world, ui::{canvas::UICanvas, elements::{ElementInfo, UIElement}, style::{Color, PositionSetting, Sizing, Style}, uniforms::UIInstance, DrawUI, UIEngine}};
+use wgpu::util::DeviceExt;
 
 run_world!(
     TestWorldApp,
@@ -11,22 +12,19 @@ run_world!(
             UPDATE => |app: &mut TestWorldApp, node: &mut Node| {
                 // setup
                 let size = Vector2 { x: app.render_engine().size.width as f32, y: app.render_engine().size.height as f32 };
-                let mut contents = Vec::<UIInstance>::new();
 
                 // render
-                render_ui(node, &mut contents, &UIRenderInfo { position: Vector2::zero(), size, display_size: size }, 0.5);
-
-                // update canvas with contents
-                match &mut node.component {
+                match &node.component {
                     Component::Canvas(canvas) => {
-                        canvas.update(app.render_engine(), &contents);
-                    },
+                        render_ui(node, app.render_engine(), &UIRenderInfo { position: Vector2::zero(), size, display_size: size }, &canvas.blank_texture, 0.5);
+                    }
                     _ => {}
                 }
             },
-            RENDER => |pass: &mut wgpu::RenderPass<'a>, app: &'b TestWorldApp, data: &'b UICanvas| { 
+            RENDER => |pass: &mut wgpu::RenderPass<'a>, app: &'b TestWorldApp, canvas: &'b UICanvas| {
                 pass.prepare_ui(&app.ui_engine);
-                pass.draw_canvas(app.render_engine(), &app.ui_engine, data);
+                let texture = app.render_engine().texture(&canvas.blank_texture);
+                pass.set_bind_group(1, &texture.bind_group, &[]);
             },
             REMOVED => |_: &mut TestWorldApp, _: &mut Node| {}
         },
@@ -36,7 +34,9 @@ run_world!(
             DATA => UIElement,
             ADDED => |_: &mut TestWorldApp, _: &mut Node| {},
             UPDATE => |_: &mut TestWorldApp, _: &mut Node| {},
-            RENDER => |_: &mut wgpu::RenderPass<'a>, _: &'b TestWorldApp, _: &'b UIElement| {},
+            RENDER => |pass: &mut wgpu::RenderPass<'a>, app: &'b TestWorldApp, element: &'b UIElement| {
+                pass.draw_element(app.render_engine(), &app.ui_engine, element);
+            },
             REMOVED => |_: &mut TestWorldApp, _: &mut Node| {}
         }
     ]
@@ -49,7 +49,7 @@ pub struct UIRenderInfo {
     pub display_size: Vector2<f32>
 }
 
-pub fn render_ui(node: &Node, contents: &mut Vec<UIInstance>, info: &UIRenderInfo, layer: f32) {
+pub fn render_ui(node: &Node, engine: &RenderEngine, info: &UIRenderInfo, blank_texture: &Handle<Texture>, layer: f32) {
     node.children.iter().for_each(|child| {
         match &child.component {
             Component::Ui(element) => {
@@ -72,7 +72,7 @@ pub fn render_ui(node: &Node, contents: &mut Vec<UIInstance>, info: &UIRenderInf
                     }
                 };
 
-                // save instance
+                // create instance
                 let raw_transform = TransformRaw::from_generic(&transform).model;
                 let instance = UIInstance([
                     raw_transform[0],
@@ -84,14 +84,16 @@ pub fn render_ui(node: &Node, contents: &mut Vec<UIInstance>, info: &UIRenderInf
                     [
                         element.style.round.size(&info.display_size) / f32::max(size.x, size.y),
                         element.style.border.size(&info.display_size) / f32::max(size.x, size.y),
-                        0.0,
+                        if element.texture.is_some() { 1.0 } else { 0.0 },
                         0.0
                     ]
                 ]);
-                contents.push(instance);
+
+                // save instance info
+                engine.queue.write_buffer(&element.buffer, 0, bytemuck::cast_slice(&instance.0));
 
                 // render next elements
-                render_ui(child, contents, &new_info, layer - 0.05);
+                render_ui(child, engine, &new_info, blank_texture, layer - 0.05);
             },
             _ => {}
         }
@@ -182,8 +184,9 @@ impl WorldApp for TestWorldApp {
     }
 
     fn start(&mut self, root: &mut Node) {
+        let canvas = UICanvas::new(self.render_engine_mut());
         root.add_child(self, Node {
-            component: Component::Canvas(UICanvas::new(self.render_engine())),
+            component: Component::Canvas(canvas),
             children: vec![
                 Node {
                     component: Component::Ui(
@@ -196,7 +199,15 @@ impl WorldApp for TestWorldApp {
                                 round: Sizing::Px(15.0),
                                 ..Default::default() 
                             }, 
-                            info: ElementInfo::Container 
+                            info: ElementInfo::Container,
+                            texture: None,
+                            buffer: self.render_engine().device.create_buffer_init(
+                                &wgpu::util::BufferInitDescriptor {
+                                    label: Some("Instance Buffer"),
+                                    contents: bytemuck::cast_slice(&[[0.0; 4]; 7]),
+                                    usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST
+                                }
+                            )
                         }
                     ),
                     children: vec![
@@ -214,7 +225,15 @@ impl WorldApp for TestWorldApp {
                                         color: Color { red: 0.0, green: 0.0, blue: 1.0, alpha: 1.0 },
                                         ..Default::default() 
                                     }, 
-                                    info: ElementInfo::Container 
+                                    info: ElementInfo::Container,
+                                    texture: None,
+                                    buffer: self.render_engine().device.create_buffer_init(
+                                        &wgpu::util::BufferInitDescriptor {
+                                            label: Some("Instance Buffer"),
+                                            contents: bytemuck::cast_slice(&[[0.0; 4]; 7]),
+                                            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST
+                                        }
+                                    )
                                 }
                             ),
                             ..Default::default()

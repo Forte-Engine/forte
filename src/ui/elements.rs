@@ -2,6 +2,8 @@ use std::fmt::Debug;
 
 use cgmath::Vector2;
 
+use crate::render::{resources::Handle, textures::textures::Texture};
+
 use super::style::Style;
 
 /// The possible states for different UI elements.
@@ -11,10 +13,12 @@ pub enum ElementInfo {
 }
 
 /// A wrapper for a UI element info and style.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct UIElement {
     pub style: Style,
-    pub info: ElementInfo
+    pub info: ElementInfo,
+    pub buffer: wgpu::Buffer,
+    pub texture: Option<Handle<Texture>>
 }
 
 impl UIElement {

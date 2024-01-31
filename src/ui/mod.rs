@@ -1,6 +1,6 @@
-use crate::render::{primitives::{vertices::Vertex, mesh::Mesh}, pipelines::Pipeline, render_engine::RenderEngine, resources::Handle};
+use crate::render::{pipelines::Pipeline, primitives::{vertices::Vertex, mesh::Mesh}, render_engine::RenderEngine, resources::Handle, textures::textures::Texture};
 
-use self::{canvas::UICanvas, uniforms::UIInstance};
+use self::{elements::UIElement, uniforms::UIInstance};
 
 pub mod canvas;
 pub mod elements;
@@ -38,7 +38,9 @@ impl UIEngine {
         let pipeline = Pipeline::new(
             "ui", engine, ui_shader::SOURCE,
             &[Vertex::desc(), UIInstance::desc()],
-            &[]
+            &[
+                
+            ]
         );
 
         let mesh = engine.create_mesh("ui_engine_mesh", VERTICES, INDICES);
@@ -53,11 +55,11 @@ pub trait DrawUI<'a, 'b> where 'b: 'a {
         ui_engine: &'b UIEngine
     );
 
-    fn draw_canvas(
+    fn draw_element(
         &mut self,
         render_engine: &'b RenderEngine,
         ui_engine: &'b UIEngine,
-        canvas: &'b UICanvas
+        element: &'b UIElement
     );
 }
 
@@ -69,16 +71,16 @@ impl<'a, 'b> DrawUI<'a, 'b> for wgpu::RenderPass<'a> where 'b: 'a {
         self.set_pipeline(&ui_engine.pipeline.render_pipeline);
     }
 
-    fn draw_canvas(
+    fn draw_element(
         &mut self,
         render_engine: &'b RenderEngine,
         ui_engine: &'b UIEngine,
-        canvas: &'b UICanvas
+        element: &'b UIElement
     ) {
         let mesh = render_engine.mesh(&ui_engine.mesh);
         self.set_vertex_buffer(0, mesh.vertex_buf.slice(..));
-        self.set_vertex_buffer(1, canvas.buffer.slice(..));
+        self.set_vertex_buffer(1, element.buffer.slice(..));
         self.set_index_buffer(mesh.index_buf.slice(..), wgpu::IndexFormat::Uint16);
-        self.draw_indexed(0 .. mesh.num_indices, 0, 0 .. canvas.cur_size as u32);
+        self.draw_indexed(0 .. mesh.num_indices, 0, 0 .. 1);
     }
 }
