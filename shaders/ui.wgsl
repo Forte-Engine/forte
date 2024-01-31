@@ -20,7 +20,8 @@ struct VertexOutput {
     @location(1) color: vec4<f32>,
     @location(2) border_color: vec4<f32>,
     @location(3) round: f32,
-    @location(4) border: f32
+    @location(4) border: f32,
+    @location(5) draw_texture: u32
 }
 
 @vertex
@@ -44,8 +45,14 @@ fn vs_main(
     out.border_color = instance.border_color;
     out.round = instance.extra.x;
     out.border = instance.extra.y;
+    out.draw_texture = u32(instance.extra.z);
     return out;
 }
+
+@group(0) @binding(0)
+var t_diffuse: texture_2d<f32>;
+@group(0) @binding(1)
+var s_diffuse: sampler;
 
 fn dist_to_edge(coords: vec2<f32>, dimensions: vec2<f32>, max_dist: f32) -> f32 {
     let dist_from_max = min(
@@ -76,6 +83,7 @@ fn dist_to_edge(coords: vec2<f32>, dimensions: vec2<f32>, max_dist: f32) -> f32 
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+    var color = in.color;
     let max_dist = max(in.border, in.round);
     let border_ratio = min(in.border / max_dist, 0.99);
     let dist = dist_to_edge(in.tex_coords, vec2<f32>(1.0, 1.0), max_dist);
@@ -83,6 +91,6 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     else if (dist <= border_ratio - 0.1) { return in.border_color; }
     else if (dist <= border_ratio) { 
         let step = smoothstep(border_ratio - 0.1, border_ratio, dist);
-        return (in.color * step) + (in.border_color * (1.0 - step));
-    } else { return vec4<f32>(in.color); }
+        return (color * step) + (in.border_color * (1.0 - step));
+    } else { return vec4<f32>(color); }
 }
