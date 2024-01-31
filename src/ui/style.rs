@@ -4,9 +4,12 @@ use cgmath::{Vector2, Vector4};
 pub struct Style {
     pub position_setting: PositionSetting,
     pub color: Color,
-    pub position: SizingRect,
-    pub border: SizingRect,
-    pub corner_rounds: CornerRounds,
+    pub left: Sizing,
+    pub right: Sizing,
+    pub top: Sizing,
+    pub bottom: Sizing,
+    pub border: Sizing,
+    pub round: Sizing,
     pub width: Sizing,
     pub height: Sizing,
 }
@@ -18,6 +21,11 @@ impl Style {
             y: self.height.size(display_size) 
         }
     }
+
+    pub fn left_set(&self) -> bool { self.left.is_set() }
+    pub fn right_set(&self) -> bool { self.right.is_set() }
+    pub fn top_set(&self) -> bool { self.top.is_set() }
+    pub fn bottom_set(&self) -> bool { self.bottom.is_set() }
 }
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, PartialOrd)]
@@ -55,34 +63,4 @@ impl Sizing {
     }
 
     pub fn is_set(&self) -> bool { !matches!(self, Self::Auto) }
-}
-
-#[derive(Debug, Default, Clone, Copy)]
-pub struct SizingRect {
-    pub left: Sizing,
-    pub right: Sizing,
-    pub top: Sizing,
-    pub bottom: Sizing,
-}
-
-impl SizingRect {
-    pub fn left_set(&self) -> bool { self.left.is_set() }
-    pub fn right_set(&self) -> bool { self.right.is_set() }
-    pub fn top_set(&self) -> bool { self.top.is_set() }
-    pub fn bottom_set(&self) -> bool { self.bottom.is_set() }
-}
-
-#[derive(Debug, Default, Clone, Copy)]
-pub struct CornerRounds {
-    pub top_left: Sizing,
-    pub top_right: Sizing,
-    pub bottom_left: Sizing,
-    pub bottom_right: Sizing,
-}
-
-impl CornerRounds {
-    pub fn top_left_set(&self) -> bool { self.top_left.is_set() }
-    pub fn top_right_set(&self) -> bool { self.top_right.is_set() }
-    pub fn bottom_left_set(&self) -> bool { self.bottom_left.is_set() }
-    pub fn bottom_right_set(&self) -> bool { self.bottom_right.is_set() }
 }

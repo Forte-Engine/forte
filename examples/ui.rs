@@ -1,5 +1,5 @@
 use cgmath::{Quaternion, Vector2, Zero};
-use forte_engine::{render::{primitives::transforms::TransformRaw, render_engine::RenderEngine}, run_world, ui::{canvas::UICanvas, elements::{ElementInfo, UIElement}, style::{Color, CornerRounds, PositionSetting, Sizing, SizingRect, Style}, uniforms::UIInstance, DrawUI, UIEngine}};
+use forte_engine::{render::{primitives::transforms::TransformRaw, render_engine::RenderEngine}, run_world, ui::{canvas::UICanvas, elements::{ElementInfo, UIElement}, style::{Color, PositionSetting, Sizing, Style}, uniforms::UIInstance, DrawUI, UIEngine}};
 
 run_world!(
     TestWorldApp,
@@ -73,7 +73,6 @@ pub fn render_ui(node: &Node, contents: &mut Vec<UIInstance>, info: &UIRenderInf
                 };
 
                 // save instance
-                println!("Top left: {:?}", element.style.corner_rounds.top_left.size(&info.display_size));
                 let raw_transform = TransformRaw::from_generic(&transform).model;
                 let instance = UIInstance([
                     raw_transform[0],
@@ -82,16 +81,10 @@ pub fn render_ui(node: &Node, contents: &mut Vec<UIInstance>, info: &UIRenderInf
                     raw_transform[3],
                     element.style.color.to_array(),
                     [
-                        element.style.corner_rounds.top_left.size(&info.display_size) / f32::max(size.x, size.y),
-                        element.style.corner_rounds.top_right.size(&info.display_size) / f32::max(size.x, size.y),
-                        element.style.corner_rounds.bottom_left.size(&info.display_size) / f32::max(size.x, size.y),
-                        element.style.corner_rounds.bottom_right.size(&info.display_size) / f32::max(size.x, size.y),
-                    ],
-                    [
-                        element.style.border.top.size(&info.display_size) / f32::max(size.x, size.y),
-                        element.style.border.bottom.size(&info.display_size) / f32::max(size.x, size.y),
-                        element.style.border.left.size(&info.display_size) / f32::max(size.x, size.y),
-                        element.style.border.right.size(&info.display_size) / f32::max(size.x, size.y),
+                        element.style.round.size(&info.display_size) / f32::max(size.x, size.y),
+                        element.style.border.size(&info.display_size) / f32::max(size.x, size.y),
+                        0.0,
+                        0.0
                     ]
                 ]);
                 contents.push(instance);
@@ -118,8 +111,8 @@ pub fn calculate_position_size(node: &Node, info: &UIRenderInfo) -> (Vector2<f32
             };
         
             // if left positioning given, position based on above info, an offset, and the positioning type
-            if element.style.position.left_set() {
-                let offset = element.style.position.left.size(&info.display_size);
+            if element.style.left_set() {
+                let offset = element.style.left.size(&info.display_size);
                 match element.style.position_setting {
                     PositionSetting::Parent => {
                         position.x = info.position.x + offset;
@@ -130,8 +123,8 @@ pub fn calculate_position_size(node: &Node, info: &UIRenderInfo) -> (Vector2<f32
                 }
             } 
             // otherwise, do the same for the right
-            else if element.style.position.right_set() {
-                let offset = element.style.position.right.size(&info.display_size);
+            else if element.style.right_set() {
+                let offset = element.style.right.size(&info.display_size);
                 match element.style.position_setting {
                     PositionSetting::Parent => {
                         position.x = info.position.x + info.size.x - size.x - offset;
@@ -143,8 +136,8 @@ pub fn calculate_position_size(node: &Node, info: &UIRenderInfo) -> (Vector2<f32
             }
 
             // do top bottom positioning
-            if element.style.position.top_set() {
-                let offset = element.style.position.top.size(&info.display_size);
+            if element.style.top_set() {
+                let offset = element.style.top.size(&info.display_size);
                 match element.style.position_setting {
                     PositionSetting::Parent => {
                         position.y = info.position.y + info.size.y - size.y - offset;
@@ -153,8 +146,8 @@ pub fn calculate_position_size(node: &Node, info: &UIRenderInfo) -> (Vector2<f32
                         position.y = info.display_size.y - size.y - offset;
                     }
                 }
-            } else if element.style.position.bottom_set() {
-                let offset = element.style.position.bottom.size(&info.display_size);
+            } else if element.style.bottom_set() {
+                let offset = element.style.bottom.size(&info.display_size);
                 position.y = offset;
                 match element.style.position_setting {
                     PositionSetting::Parent => {
@@ -198,18 +191,8 @@ impl WorldApp for TestWorldApp {
                                 width: Sizing::Px(200.0), 
                                 height: Sizing::Px(200.0), 
                                 color: Color { red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0 },
-                                border: SizingRect {
-                                    top: Sizing::Px(15.0),
-                                    bottom: Sizing::Px(15.0),
-                                    left: Sizing::Px(15.0),
-                                    right: Sizing::Px(15.0)
-                                },
-                                corner_rounds: CornerRounds {
-                                    top_left: Sizing::Px(15.0),
-                                    top_right: Sizing::Px(15.0),
-                                    bottom_left: Sizing::Px(15.0),
-                                    bottom_right: Sizing::Px(15.0)
-                                },
+                                border: Sizing::Px(5.0),
+                                round: Sizing::Px(15.0),
                                 ..Default::default() 
                             }, 
                             info: ElementInfo::Container 
@@ -223,17 +206,10 @@ impl WorldApp for TestWorldApp {
                                         width: Sizing::Px(100.0), 
                                         height: Sizing::Px(100.0), 
                                         position_setting: PositionSetting::Parent,
-                                        position: SizingRect {
-                                            top: Sizing::Px(10.0),
-                                            left: Sizing::Px(10.0),
-                                            ..Default::default()
-                                        },
-                                        corner_rounds: CornerRounds {
-                                            top_left: Sizing::Px(15.0),
-                                            top_right: Sizing::Px(15.0),
-                                            bottom_left: Sizing::Px(15.0),
-                                            bottom_right: Sizing::Px(15.0)
-                                        },
+                                        top: Sizing::Px(10.0),
+                                        left: Sizing::Px(10.0),
+                                        border: Sizing::Px(5.0),
+                                        round: Sizing::Px(10.0),
                                         color: Color { red: 0.0, green: 0.0, blue: 1.0, alpha: 1.0 },
                                         ..Default::default() 
                                     }, 
