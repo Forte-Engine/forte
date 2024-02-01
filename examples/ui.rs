@@ -24,7 +24,7 @@ run_world!(
             RENDER => |pass: &mut wgpu::RenderPass<'a>, app: &'b TestWorldApp, canvas: &'b UICanvas| {
                 pass.prepare_ui(&app.ui_engine);
                 let texture = app.render_engine().texture(&canvas.blank_texture);
-                pass.set_bind_group(1, &texture.bind_group, &[]);
+                pass.set_bind_group(0, &texture.bind_group, &[]);
             },
             REMOVED => |_: &mut TestWorldApp, _: &mut Node| {}
         },

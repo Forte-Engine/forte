@@ -49,9 +49,9 @@ fn vs_main(
     return out;
 }
 
-@group(1) @binding(0)
+@group(0) @binding(0)
 var t_diffuse: texture_2d<f32>;
-@group(1) @binding(1)
+@group(0) @binding(1)
 var s_diffuse: sampler;
 
 fn dist_to_edge(coords: vec2<f32>, dimensions: vec2<f32>, max_dist: f32) -> f32 {
@@ -84,7 +84,7 @@ fn dist_to_edge(coords: vec2<f32>, dimensions: vec2<f32>, max_dist: f32) -> f32 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     var color = in.color;
-    if in.draw_texture > 0.0 { color *= textureSample(t_diffuse, s_diffuse, in.tex_coords); }
+    color *= textureSample(t_diffuse, s_diffuse, in.tex_coords);
     let max_dist = max(in.border, in.round);
     let border_ratio = min(in.border / max_dist, 0.99);
     let dist = dist_to_edge(in.tex_coords, vec2<f32>(1.0, 1.0), max_dist);
