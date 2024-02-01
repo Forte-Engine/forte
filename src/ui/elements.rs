@@ -20,7 +20,8 @@ pub enum ElementInfo {
 pub struct UIElement {
     pub style: Style,
     pub info: ElementInfo,
-    pub buffer: wgpu::Buffer
+    pub buffer: wgpu::Buffer,
+    pub children: Vec<UIElement>
 }
 
 /// Creates a default UI buffer
@@ -39,8 +40,8 @@ impl UIElement {
     pub fn min_size(&self, display_size: &Vector2<f32>) -> Vector2<f32> { self.style.min_size(display_size) }
 
     /// Creates a new container with the given render engine and style.
-    pub fn container(render_engine: &RenderEngine, style: Style) -> Self { Self { style, info: ElementInfo::Container, buffer: ui_buffer(render_engine) } }
+    pub fn container(render_engine: &RenderEngine, style: Style) -> Self { Self { style, info: ElementInfo::Container, buffer: ui_buffer(render_engine), children: Vec::new() } }
 
     /// Creates a new image element with the given render engine, image and style.
-    pub fn image(render_engine: &RenderEngine, style: Style, texture: Handle<Texture>) -> Self { Self { style, info: ElementInfo::Image(texture), buffer: ui_buffer(render_engine) } }
+    pub fn image(render_engine: &RenderEngine, style: Style, texture: Handle<Texture>) -> Self { Self { style, info: ElementInfo::Image(texture), buffer: ui_buffer(render_engine), children: Vec::new() } }
 }

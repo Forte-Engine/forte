@@ -26,7 +26,8 @@ const INDICES: &[u16] = &[
 #[derive(Debug)]
 pub struct UIEngine {
     pipeline: Pipeline,
-    mesh: Handle<Mesh>
+    mesh: Handle<Mesh>,
+    elements: Vec<UIElement>
 }
 
 /// The UI shader.
@@ -45,7 +46,7 @@ impl UIEngine {
 
         let mesh = engine.create_mesh("ui_engine_mesh", VERTICES, INDICES);
 
-        Self { pipeline, mesh }
+        Self { pipeline, mesh, elements: Vec::new() }
     }
 }
 
