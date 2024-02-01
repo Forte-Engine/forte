@@ -30,7 +30,7 @@ pub struct UIEngine {
 }
 
 /// The UI shader.
-#[include_wgsl_oil::include_wgsl_oil("../../shaders/ui.wgsl")]
+#[include_wgsl_oil::include_wgsl_oil("ui.wgsl")]
 mod ui_shader {}
 
 impl UIEngine {
