@@ -2,6 +2,7 @@ use log::info;
 use render::{input::EngineInput, render_engine::RenderEngine};
 use winit::{event_loop::EventLoop, window::WindowBuilder, event::{Event, WindowEvent}, dpi::PhysicalSize};
 
+pub mod components;
 pub mod lights;
 pub mod math;
 pub mod primitives;
@@ -14,6 +15,9 @@ pub mod world;
 pub trait EngineApp {
     /// The create function is used by the run_app function to create a new app.  This is to be used to initialize the app with a render engine.
     fn create(engine: RenderEngine) -> Self;
+
+    /// The start function is called directly after create.  This is useful for running code after the engine and app are completely initialized.
+    fn start(&mut self);
 
     /// The input function is called when an input is picked up by the event loop in the run_app function.  See RenderEngineInput documentation for more info.
     fn input(&mut self, input: EngineInput);

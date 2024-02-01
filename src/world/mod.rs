@@ -221,6 +221,8 @@ macro_rules! run_world {
                 Self { app, root }
             }
 
+            fn start(&mut self) {}
+
             // Update the app, then its nodes
             fn update(&mut self) {
                 // call updates

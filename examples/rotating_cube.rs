@@ -94,6 +94,8 @@ impl EngineApp for MainApp {
         }
     }
 
+    fn start(&mut self) {}
+
     fn input(&mut self, input: EngineInput) {
         // display all inputs except mouse move
         match input {
