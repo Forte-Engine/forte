@@ -1,6 +1,5 @@
 use cgmath::{Quaternion, Vector2, Zero};
 use forte_engine::{math::quaternion::QuaternionExt, render::{primitives::transforms::TransformRaw, render_engine::RenderEngine, resources::Handle, textures::textures::Texture}, run_world, ui::{canvas::UICanvas, elements::{ElementInfo, UIElement}, style::{Color, PositionSetting, Sizing, Style}, uniforms::UIInstance, DrawUI, UIEngine}};
-use wgpu::util::DeviceExt;
 
 run_world!(
     TestWorldApp,
@@ -193,8 +192,9 @@ impl WorldApp for TestWorldApp {
             children: vec![
                 Node {
                     component: Component::Ui(
-                        UIElement { 
-                            style: Style { 
+                        UIElement::image(
+                            self.render_engine(),
+                            Style { 
                                 width: Sizing::Px(100.0), 
                                 height: Sizing::Px(100.0), 
                                 position_setting: PositionSetting::Parent,
@@ -203,45 +203,32 @@ impl WorldApp for TestWorldApp {
                                 border: Sizing::Px(5.0),
                                 round: Sizing::Px(10.0),
                                 ..Default::default() 
-                            }, 
-                            info: ElementInfo::Image(texture), 
-                            buffer: self.render_engine().device.create_buffer_init(
-                                &wgpu::util::BufferInitDescriptor {
-                                    label: Some("Instance Buffer"),
-                                    contents: bytemuck::cast_slice(&[[0.0; 4]; 7]),
-                                    usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST
-                                }
-                            )
-                        }
+                            },
+                            texture
+                        )
                     ),
                     ..Default::default()
                 },
                 Node {
                     component: Component::Ui(
-                        UIElement { 
-                            style: Style { 
+                        UIElement::container(
+                            self.render_engine(), 
+                            Style { 
                                 width: Sizing::Px(200.0), 
                                 height: Sizing::Px(200.0), 
                                 color: Color { red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0 },
                                 border: Sizing::Px(5.0),
                                 round: Sizing::Px(15.0),
                                 ..Default::default() 
-                            }, 
-                            info: ElementInfo::Container,
-                            buffer: self.render_engine().device.create_buffer_init(
-                                &wgpu::util::BufferInitDescriptor {
-                                    label: Some("Instance Buffer"),
-                                    contents: bytemuck::cast_slice(&[[0.0; 4]; 7]),
-                                    usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST
-                                }
-                            )
-                        }
+                            }
+                        )
                     ),
                     children: vec![
                         Node {
                             component: Component::Ui(
-                                UIElement {
-                                    style: Style {
+                                UIElement::container(
+                                    self.render_engine(), 
+                                    Style {
                                         width: Sizing::Px(100.0), 
                                         height: Sizing::Px(100.0), 
                                         position_setting: PositionSetting::Parent,
@@ -251,16 +238,8 @@ impl WorldApp for TestWorldApp {
                                         round: Sizing::Px(10.0),
                                         color: Color { red: 0.0, green: 0.0, blue: 1.0, alpha: 1.0 },
                                         ..Default::default() 
-                                    }, 
-                                    info: ElementInfo::Container,
-                                    buffer: self.render_engine().device.create_buffer_init(
-                                        &wgpu::util::BufferInitDescriptor {
-                                            label: Some("Instance Buffer"),
-                                            contents: bytemuck::cast_slice(&[[0.0; 4]; 7]),
-                                            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST
-                                        }
-                                    )
-                                }
+                                    }
+                                )
                             ),
                             ..Default::default()
                         }
