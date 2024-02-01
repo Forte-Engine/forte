@@ -4,7 +4,7 @@ pub trait EngineComponent<C> {
     fn create(render_engine: &mut RenderEngine) -> Self;
     fn start(components: &mut C);
     fn update(components: &mut C);
-    fn render<'rpass>(&self, pass: &mut wgpu::RenderPass<'rpass>);
+    fn render<'rpass>(&'rpass self, render_engine: &'rpass RenderEngine, pass: &mut wgpu::RenderPass<'rpass>);
     fn exit(component: &mut C);
 }
 
@@ -44,7 +44,6 @@ macro_rules! create_app {
                 $(
                     <$type>::update(self);
                 )*
-                println!("=======");
 
                 let mut resources = start_render!(self.render_engine);
                 $(
@@ -52,7 +51,7 @@ macro_rules! create_app {
                         let pass_id = $pass_idx;
                         let mut pass = pass!(self.render_engine, resources);
                         $(
-                            self.$to_render.render(&mut pass);
+                            self.$to_render.render(&self.render_engine, &mut pass);
                         )*
                         pass;
                     }

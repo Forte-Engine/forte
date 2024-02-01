@@ -1,5 +1,6 @@
 use cgmath::*;
-use crate::math::transforms::Transform;
+use wgpu::util::DeviceExt;
+use crate::{math::transforms::Transform, render::render_engine::RenderEngine};
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
@@ -68,5 +69,24 @@ impl TransformRaw {
             model: transform.to_mat().into(),
             normal: Matrix3::from(transform.rotation).into()
         }
+    }
+
+    /// Creates an vector of raw transforms from an array of transforms
+    pub fn from_generic_array(transforms: &[Transform]) -> Vec<TransformRaw> {
+        transforms.iter().map(Self::from_generic).collect::<Vec<TransformRaw>>()
+    }
+
+    pub fn buffer_from_raw(engine: &RenderEngine, inputs: &[Self]) -> wgpu::Buffer {
+        engine.device.create_buffer_init(
+            &wgpu::util::BufferInitDescriptor {
+                label: Some("Instance Buffer"),
+                contents: bytemuck::cast_slice(inputs),
+                usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST
+            }
+        )
+    }
+
+    pub fn buffer_from_generic(engine: &RenderEngine, inputs: &[Transform]) -> wgpu::Buffer {
+        Self::buffer_from_raw(engine, &Self::from_generic_array(inputs))
     }
 }
