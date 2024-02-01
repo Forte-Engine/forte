@@ -1,5 +1,5 @@
 use cgmath::*;
-use winit::event::*;
+use winit::{event::*, keyboard::PhysicalKey};
 
 /// An enum that represents all inputs that the engine currently supports in an easy to reference manner.
 /// 
@@ -13,7 +13,7 @@ pub enum EngineInput {
     MouseMove(Point2<f32>),
     MouseButton(winit::event::MouseButton, winit::event::ElementState),
     MouseWheel(winit::event::MouseScrollDelta),
-    KeyInput(winit::event::VirtualKeyCode, winit::event::ElementState)
+    KeyInput(winit::keyboard::KeyCode, winit::event::ElementState)
 }
 
 impl EngineInput {
@@ -40,9 +40,12 @@ impl EngineInput {
             WindowEvent::MouseWheel { delta, .. } => Some(Self::MouseWheel(*delta)),
 
             // handle keyboard inputs
-            WindowEvent::KeyboardInput { input, .. } => 
-                if input.virtual_keycode.is_some() { Some(Self::KeyInput(input.virtual_keycode.unwrap(), input.state)) }
-                else { None },
+            WindowEvent::KeyboardInput { event, .. } => {
+                match &event.physical_key {
+                    PhysicalKey::Code(code) => Some(Self::KeyInput(*code, event.state)),
+                    PhysicalKey::Unidentified(_) => None,
+                }
+            }
 
             // all other inputs, return nothing
             _ => None

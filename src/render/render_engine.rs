@@ -10,7 +10,7 @@ use crate::render::{primitives::{mesh::Mesh, cameras::Camera, vertices::Vertex},
 /// DO NOT try to modify any values in this struct, this will only cause errors unless you know what you are doing.
 #[derive(Debug)]
 pub struct RenderEngine {
-    pub surface: wgpu::Surface,
+    pub surface: wgpu::Surface<'static>,
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
     pub config: wgpu::SurfaceConfiguration,
@@ -64,7 +64,7 @@ impl RenderEngine {
         });
 
         // create surface
-        let surface = unsafe { instance.create_surface(&window) }.unwrap();
+        let surface = unsafe { instance.create_surface_unsafe(wgpu::SurfaceTargetUnsafe::from_window(&window).unwrap()) }.unwrap();
 
         // create adapter
         let adapter = pollster::block_on(instance.request_adapter(
@@ -78,8 +78,8 @@ impl RenderEngine {
         // create device and queue
         let (device, queue) = pollster::block_on(adapter.request_device(
             &wgpu::DeviceDescriptor {
-                features: wgpu::Features::VERTEX_WRITABLE_STORAGE,
-                limits: wgpu::Limits::default(),
+                required_features: wgpu::Features::VERTEX_WRITABLE_STORAGE,
+                required_limits: wgpu::Limits::default(),
                 label: None
             },
             None
@@ -95,7 +95,8 @@ impl RenderEngine {
             format: format, width: size.width, height: size.height,
             present_mode: capabilities.present_modes[0],
             alpha_mode: capabilities.alpha_modes[0],
-            view_formats: vec![]
+            view_formats: vec![],
+            desired_maximum_frame_latency: 2
         };
         surface.configure(&device, &config);
 

@@ -234,11 +234,12 @@ macro_rules! run_world {
                     pass.draw_node(&self.app, &self.root);
                 }
                 end_render!(self.app.render_engine_mut(), resources);
+
+                self.app.render_engine().next_frame();
             }
 
             fn input(&mut self, input: forte_engine::render::input::EngineInput) {}
             fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) { self.app.render_engine_mut().resize(new_size); }
-            fn events_cleared(&mut self) { self.app.render_engine_mut().next_frame(); }
             fn exit(&mut self) { self.app.exit(&mut self.root); }
         }
 

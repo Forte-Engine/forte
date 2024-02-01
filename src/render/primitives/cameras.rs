@@ -1,6 +1,6 @@
 use cgmath::*;
 use wgpu::util::DeviceExt;
-use winit::event::{ElementState, VirtualKeyCode};
+use winit::{event::ElementState, keyboard::KeyCode};
 
 use crate::render::{OPENGL_TO_WGPU_MATRIX, render_engine::*, input::EngineInput};
 
@@ -155,12 +155,12 @@ impl CameraController {
             EngineInput::KeyInput(key, state) => {
                 let pressed = state == &ElementState::Pressed;
                 match key {
-                    VirtualKeyCode::W => self.set_forward(pressed),
-                    VirtualKeyCode::S => self.set_backward(pressed),
-                    VirtualKeyCode::A => self.set_left(pressed),
-                    VirtualKeyCode::D => self.set_right(pressed),
-                    VirtualKeyCode::LShift => self.set_up(pressed),
-                    VirtualKeyCode::LControl => self.set_down(pressed),
+                    KeyCode::KeyW => self.set_forward(pressed),
+                    KeyCode::KeyS => self.set_backward(pressed),
+                    KeyCode::KeyA => self.set_left(pressed),
+                    KeyCode::KeyD => self.set_right(pressed),
+                    KeyCode::ShiftLeft => self.set_up(pressed),
+                    KeyCode::ControlLeft => self.set_down(pressed),
                     _ => {}
                 }
             }

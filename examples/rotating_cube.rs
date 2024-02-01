@@ -128,10 +128,10 @@ impl EngineApp for MainApp {
 
         // end render
         end_render!(self.render_engine, resources);
+        self.render_engine.next_frame();
     }
 
     fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) { self.render_engine.resize(new_size); }
-    fn events_cleared(&mut self) { self.render_engine.next_frame(); }
 
     fn exit(&mut self) {}
 }

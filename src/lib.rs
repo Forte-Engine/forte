@@ -1,6 +1,6 @@
-use log::{warn, info};
+use log::info;
 use render::{input::EngineInput, render_engine::RenderEngine};
-use winit::{event_loop::{EventLoop, ControlFlow}, window::WindowBuilder, event::{Event, WindowEvent}, dpi::PhysicalSize};
+use winit::{event_loop::EventLoop, window::WindowBuilder, event::{Event, WindowEvent}, dpi::PhysicalSize};
 
 pub mod lights;
 pub mod math;
@@ -22,9 +22,6 @@ pub trait EngineApp {
     /// Called when the window resizes, if you are keeping a render engine around, call the engines resize function now.
     fn resize(&mut self, new_size: PhysicalSize<u32>);
 
-    /// Called when a redraw is requested by the event loop.  For basic functionallity, just call `render_engine.next_frame()`.
-    fn events_cleared(&mut self);
-
     /// The exit function that is called when the program exits.
     fn exit(&mut self);
 }
@@ -40,7 +37,7 @@ pub fn run_app<T: EngineApp + 'static>() {
 
     // setup window and event loop
     info!("Creating window and event loop...");
-    let event_loop = EventLoop::new();
+    let event_loop = EventLoop::new().unwrap();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 
     // setup engine
@@ -52,18 +49,22 @@ pub fn run_app<T: EngineApp + 'static>() {
     let mut app = T::create(engine);
 
     info!("Starting event loop...");
-    event_loop.run(move |event, _, flow| {
+    let _ = event_loop.run(move |event, target| {
         match event {
             // window events
             Event::WindowEvent { ref event, .. } => {
                 // match event
                 match event {
                     // if close requested, exit
-                    WindowEvent::CloseRequested => *flow = ControlFlow::Exit, 
+                    WindowEvent::CloseRequested => target.exit(), 
 
                     // handle resizes
                     WindowEvent::Resized(size) => app.resize(*size),
-                    WindowEvent::ScaleFactorChanged { new_inner_size, .. } => app.resize(**new_inner_size),
+
+                    // handle updates
+                    WindowEvent::RedrawRequested => {
+                        app.update();
+                    },
                     
                     // otherwise, handle as an app input
                     _ => {
@@ -75,22 +76,14 @@ pub fn run_app<T: EngineApp + 'static>() {
                     }
                 }
             },
-
-            // on main events cleared, request redraw
-            Event::MainEventsCleared => app.events_cleared(),
-
-            // update the app when redraw requested
-            Event::RedrawRequested(..) => app.update(),
-
-            // when the loop stops, call the exit functions
-            Event::LoopDestroyed => {
-                info!("Exiting...");
-                app.exit();
-                info!("Goodbye :(");
-            },
-
-            // uh-oh, we missed something
-            _ => warn!("Unhandled global event {:?}", event)
+            Event::NewEvents(_) => {},
+            Event::DeviceEvent { device_id: _, event: _ } => {},
+            Event::UserEvent(_) => {},
+            Event::Suspended => {},
+            Event::Resumed => {},
+            Event::AboutToWait => {},
+            Event::LoopExiting => app.exit(),
+            Event::MemoryWarning => panic!("Out of memory!"),
         }
-    })
+    });
 }
