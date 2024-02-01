@@ -2,7 +2,7 @@ use log::info;
 use render::{input::EngineInput, render_engine::RenderEngine};
 use winit::{event_loop::EventLoop, window::WindowBuilder, event::{Event, WindowEvent}, dpi::PhysicalSize};
 
-pub mod components;
+pub mod component_app;
 pub mod lights;
 pub mod math;
 pub mod primitives;

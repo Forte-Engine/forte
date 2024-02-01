@@ -2,6 +2,11 @@ use fxhash::FxHashMap;
 
 use crate::render::render_engine::RenderEngine;
 
+pub trait EngineComponentFactory {
+    fn id() -> u128;
+    fn create(engine: &mut App) -> Self;
+}
+
 pub trait EngineComponent {
     fn start(&mut self, components: &mut App);
     fn update(&mut self, components: &mut App);
@@ -11,7 +16,21 @@ pub trait EngineComponent {
 
 pub struct App {
     render_engine: RenderEngine,
-    components: FxHashMap<String, Box<dyn EngineComponent>>
+    components: FxHashMap<u128, Box<dyn EngineComponent>>
+}
+
+impl App {
+    // quick getters
+    pub fn render_engine(&self) -> &RenderEngine { &self.render_engine }
+    pub fn render_engine_mjt(&mut self) -> &mut RenderEngine { &mut self.render_engine }
+    
+    // component manipulation
+    pub fn get_component(&self, id: u128) -> Option<&Box<dyn EngineComponent>> { self.components.get(&id) }
+    pub fn get_component_mut(&mut self, id: u128) -> Option<&mut Box<dyn EngineComponent>> { self.components.get_mut(&id) }
+    pub fn add_component<C: EngineComponent + EngineComponentFactory + 'static>(&mut self) {
+        let component = C::create(self);
+        self.components.insert(C::id(), Box::new(component));
+    }
 }
 
 // #[macro_export]

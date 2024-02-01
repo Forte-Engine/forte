@@ -1,5 +1,5 @@
 use cgmath::Quaternion;
-use forte_engine::{components::EngineComponent, math::{quaternion::QuaternionExt, transforms::Transform}, primitives::{cameras::Camera, mesh::Mesh, textures::Texture, transforms::TransformRaw, vertices::Vertex}, render::pipelines::Pipeline, run_app, utils::resources::Handle};
+use forte_engine::{component_app::EngineComponent, math::{quaternion::QuaternionExt, transforms::Transform}, primitives::{cameras::Camera, mesh::Mesh, textures::Texture, transforms::TransformRaw, vertices::Vertex}, render::pipelines::Pipeline, run_app, utils::resources::Handle};
 
 const VERTICES: &[Vertex] = &[
     Vertex { position: [ 0.5, -0.5, -0.5], tex_coords: [0.4131759, 0.00759614], normal: [0.0, 0.0, 0.0] },
