@@ -1,5 +1,5 @@
 use cgmath::{Quaternion, Rotation3};
-use forte_engine::{run_world, render::{pipelines::Pipeline, primitives::{cameras::Camera, mesh::Mesh, transforms::TransformRaw, vertices::Vertex}, render_engine::RenderEngine, resources::Handle, textures::Texture}};
+use forte_engine::{primitives::{cameras::Camera, mesh::Mesh, textures::Texture, transforms::TransformRaw, vertices::Vertex}, render::{pipelines::Pipeline, render_engine::RenderEngine}, run_world, utils::resources::Handle};
 use wgpu::util::DeviceExt;
 
 run_world!(

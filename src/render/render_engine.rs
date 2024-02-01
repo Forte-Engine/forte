@@ -2,7 +2,7 @@ use std::time::SystemTime;
 
 use winit::window::Window;
 
-use crate::render::{primitives::{mesh::Mesh, vertices::Vertex}, textures::{Texture, depth_textures::DepthTexture}, resources::{ResourceCache, Handle}, files::Files};
+use crate::{primitives::{mesh::Mesh, textures::{Texture, depth_textures::DepthTexture}, vertices::Vertex}, utils::{files::Files, resources::{ResourceCache, Handle}}};
 
 /// A struct with all required information to render to a given window.
 /// 

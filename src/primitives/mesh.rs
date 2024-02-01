@@ -1,6 +1,6 @@
 use wgpu::util::DeviceExt;
 
-use crate::render::primitives::vertices::Vertex;
+use crate::primitives::vertices::Vertex;
 
 /// A simple struct that contains the information of mesh in a way that can be used by WGPU.
 #[derive(Debug)]

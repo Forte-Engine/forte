@@ -16,6 +16,7 @@ bytemuck = { version = "1.14", features = [ "derive" ] }
 cgmath = "0.18"
 anyhow = "1.0"
 include-wgsl-oil = "0.2.4"
+fxhash = "0.2.1"
 
 [dependencies.image]
 version = "0.24"

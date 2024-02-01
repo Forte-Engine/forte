@@ -4,8 +4,10 @@ use winit::{event_loop::EventLoop, window::WindowBuilder, event::{Event, WindowE
 
 pub mod lights;
 pub mod math;
+pub mod primitives;
 pub mod render;
 pub mod ui;
+pub mod utils;
 pub mod world;
 
 /// A trait implemented by any struct using a render engine.  The run_app function will automatically call all functions when appropriate.

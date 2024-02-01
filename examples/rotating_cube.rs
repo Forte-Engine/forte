@@ -1,6 +1,7 @@
 use cgmath::{Rotation3, Quaternion};
-use forte_engine::{end_render, math::transforms::Transform, pass, render::{primitives::{vertices::Vertex, mesh::Mesh, cameras::{CameraController, Camera}, transforms::TransformRaw}, pipelines::Pipeline, resources::Handle, textures::Texture, render_engine::*, input::EngineInput}, run_app, start_render, EngineApp};
+use forte_engine::{end_render, math::transforms::Transform, pass, primitives::{cameras::Camera, mesh::Mesh, textures::Texture, transforms::TransformRaw, vertices::Vertex}, render::{pipelines::Pipeline, render_engine::*, input::EngineInput}, utils::{camera_controller::CameraController, resources::Handle}, run_app, start_render, EngineApp};
 use wgpu::util::DeviceExt;
+use winit::event::ElementState;
 
 const VERTICES: &[Vertex] = &[
     Vertex { position: [ 0.5, -0.5, -0.5], tex_coords: [0.4131759, 0.00759614], normal: [0.0, 0.0, 0.0] },
@@ -94,10 +95,12 @@ impl EngineApp for MainApp {
     }
 
     fn input(&mut self, input: EngineInput) {
-        self.controller.input(&input);
-
         // display all inputs except mouse move
         match input {
+            EngineInput::KeyInput(key_code, state) => {
+                let pressed = matches!(state, ElementState::Pressed);
+                self.controller.key_input(key_code, pressed);
+            }
             EngineInput::MouseMove(..) => {}
             _ => println!("Received input {:?}", input)
         }

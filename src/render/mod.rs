@@ -1,11 +1,7 @@
-pub mod files;
 pub mod input;
 pub mod pipelines;
-pub mod primitives;
-pub mod textures;
 pub mod render_engine;
 pub mod render_utils;
-pub mod resources;
 
 /// A useful matrix for converting opengl matrices to WGPU matrices.  Used in rendering to make our lives easy.
 #[rustfmt::skip]
