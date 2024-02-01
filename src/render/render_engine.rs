@@ -36,6 +36,14 @@ impl RenderEngine {
     /// * handle - The resource handle that will be used to get the texture from the cache.
     pub fn texture(&self, handle: &Handle<Texture>) -> &Texture { self.texture_cache.get(handle).unwrap() }
 
+    pub fn texture_from_path(&self, path: impl Into<String>) -> &Texture { 
+        self.texture_cache.get(
+            &Handle { 
+                hash: ResourceCache::<Texture>::hash_path(path.into()), 
+                data: Default::default() 
+            }).unwrap() 
+        }
+
     /// Get a mesh from the mesh cache using a handle.
     /// 
     /// Arguments

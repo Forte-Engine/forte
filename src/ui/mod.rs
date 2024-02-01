@@ -1,4 +1,4 @@
-use crate::render::{pipelines::Pipeline, primitives::{cameras::Camera, mesh::Mesh, vertices::Vertex}, render_engine::RenderEngine, resources::Handle, textures::textures::Texture};
+use crate::render::{pipelines::Pipeline, primitives::{mesh::Mesh, vertices::Vertex}, render_engine::RenderEngine, resources::Handle, textures::textures::Texture};
 
 use self::{elements::UIElement, uniforms::UIInstance};
 
@@ -10,10 +10,10 @@ pub mod style;
 
 /// The vertices of a rectangle.
 const VERTICES: &[Vertex] = &[
-    Vertex { position: [ -1.0, -1.0, 0.0 ], tex_coords: [ 0.0, 0.0 ], normal: [0.0, 0.0, 0.0] },
-    Vertex { position: [  1.0, -1.0, 0.0 ], tex_coords: [ 1.0, 0.0 ], normal: [0.0, 0.0, 0.0] },
-    Vertex { position: [ -1.0,  1.0, 0.0 ], tex_coords: [ 0.0, 1.0 ], normal: [0.0, 0.0, 0.0] },
-    Vertex { position: [  1.0,  1.0, 0.0 ], tex_coords: [ 1.0, 1.0 ], normal: [0.0, 0.0, 0.0] }
+    Vertex { position: [ -1.0, -1.0, 0.0 ], tex_coords: [ 0.0, 1.0 ], normal: [0.0, 0.0, 0.0] },
+    Vertex { position: [  1.0, -1.0, 0.0 ], tex_coords: [ 1.0, 1.0 ], normal: [0.0, 0.0, 0.0] },
+    Vertex { position: [ -1.0,  1.0, 0.0 ], tex_coords: [ 0.0, 0.0 ], normal: [0.0, 0.0, 0.0] },
+    Vertex { position: [  1.0,  1.0, 0.0 ], tex_coords: [ 1.0, 0.0 ], normal: [0.0, 0.0, 0.0] }
 ];
 
 /// The indices of a rectangle.

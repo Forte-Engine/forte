@@ -21,11 +21,7 @@ run_world!(
                     _ => {}
                 }
             },
-            RENDER => |pass: &mut wgpu::RenderPass<'a>, app: &'b TestWorldApp, canvas: &'b UICanvas| {
-                pass.prepare_ui(&app.ui_engine);
-                let texture = app.render_engine().texture(&canvas.blank_texture);
-                pass.set_bind_group(0, &texture.bind_group, &[]);
-            },
+            RENDER => |_: &mut wgpu::RenderPass<'a>, _: &'b TestWorldApp, _: &'b UICanvas| {},
             REMOVED => |_: &mut TestWorldApp, _: &mut Node| {}
         },
 
@@ -35,6 +31,12 @@ run_world!(
             ADDED => |_: &mut TestWorldApp, _: &mut Node| {},
             UPDATE => |_: &mut TestWorldApp, _: &mut Node| {},
             RENDER => |pass: &mut wgpu::RenderPass<'a>, app: &'b TestWorldApp, element: &'b UIElement| {
+                pass.prepare_ui(&app.ui_engine);
+                let texture = match &element.info {
+                    ElementInfo::Image(texture) => app.render_engine().texture(texture),
+                    _ => app.render_engine().texture_from_path("ui.blank")
+                };
+                pass.set_bind_group(0, &texture.bind_group, &[]);
                 pass.draw_element(app.render_engine(), &app.ui_engine, element);
             },
             REMOVED => |_: &mut TestWorldApp, _: &mut Node| {}
@@ -84,7 +86,7 @@ pub fn render_ui(node: &Node, engine: &RenderEngine, info: &UIRenderInfo, blank_
                     [
                         element.style.round.size(&info.display_size) / f32::max(size.x, size.y),
                         element.style.border.size(&info.display_size) / f32::max(size.x, size.y),
-                        if element.texture.is_some() { 1.0 } else { 0.0 },
+                        0.0,
                         0.0
                     ]
                 ]);
@@ -185,9 +187,35 @@ impl WorldApp for TestWorldApp {
 
     fn start(&mut self, root: &mut Node) {
         let canvas = UICanvas::new(self.render_engine_mut());
+        let texture = self.render_engine_mut().load_texture("./examples/rotating_cube.png");
         root.add_child(self, Node {
             component: Component::Canvas(canvas),
             children: vec![
+                Node {
+                    component: Component::Ui(
+                        UIElement { 
+                            style: Style { 
+                                width: Sizing::Px(100.0), 
+                                height: Sizing::Px(100.0), 
+                                position_setting: PositionSetting::Parent,
+                                top: Sizing::Px(10.0),
+                                left: Sizing::Px(10.0),
+                                border: Sizing::Px(5.0),
+                                round: Sizing::Px(10.0),
+                                ..Default::default() 
+                            }, 
+                            info: ElementInfo::Image(texture), 
+                            buffer: self.render_engine().device.create_buffer_init(
+                                &wgpu::util::BufferInitDescriptor {
+                                    label: Some("Instance Buffer"),
+                                    contents: bytemuck::cast_slice(&[[0.0; 4]; 7]),
+                                    usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST
+                                }
+                            )
+                        }
+                    ),
+                    ..Default::default()
+                },
                 Node {
                     component: Component::Ui(
                         UIElement { 
@@ -200,7 +228,6 @@ impl WorldApp for TestWorldApp {
                                 ..Default::default() 
                             }, 
                             info: ElementInfo::Container,
-                            texture: None,
                             buffer: self.render_engine().device.create_buffer_init(
                                 &wgpu::util::BufferInitDescriptor {
                                     label: Some("Instance Buffer"),
@@ -226,7 +253,6 @@ impl WorldApp for TestWorldApp {
                                         ..Default::default() 
                                     }, 
                                     info: ElementInfo::Container,
-                                    texture: None,
                                     buffer: self.render_engine().device.create_buffer_init(
                                         &wgpu::util::BufferInitDescriptor {
                                             label: Some("Instance Buffer"),

@@ -7,9 +7,10 @@ use crate::render::{resources::Handle, textures::textures::Texture};
 use super::style::Style;
 
 /// The possible states for different UI elements.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum ElementInfo {
-    Container
+    Container,
+    Image(Handle<Texture>)
 }
 
 /// A wrapper for a UI element info and style.
@@ -17,8 +18,7 @@ pub enum ElementInfo {
 pub struct UIElement {
     pub style: Style,
     pub info: ElementInfo,
-    pub buffer: wgpu::Buffer,
-    pub texture: Option<Handle<Texture>>
+    pub buffer: wgpu::Buffer
 }
 
 impl UIElement {

@@ -13,7 +13,7 @@ impl UICanvas {
     /// 
     /// Returns a instance of `UICanvas`
     pub fn new(engine: &mut RenderEngine) -> Self {
-        let blank_texture = engine.create_texture("blank texture", include_bytes!("../../examples/rotating_cube.png"));
+        let blank_texture = engine.create_texture("ui.blank", include_bytes!("empty.png"));
         Self { blank_texture }
     }
 }

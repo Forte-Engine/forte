@@ -23,7 +23,7 @@ impl<T> ResourceCache<T> {
     pub fn new() -> Self { Self { assets: HashMap::new() } }
 
     /// Creates a u64 hash from the given path ID string
-    fn hash_path(path: String) -> u64 {
+    pub fn hash_path(path: String) -> u64 {
         let mut output: u64 = 0;
         path.chars().for_each(|char| {
             let digit = char.to_digit(36);
