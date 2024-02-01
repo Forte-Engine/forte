@@ -4,7 +4,7 @@ pub trait EngineComponent<C> {
     fn create(render_engine: &mut RenderEngine) -> Self;
     fn start(components: &mut C);
     fn update(components: &mut C);
-    fn render<'rpass>(components: &mut C, pass: &mut wgpu::RenderPass<'rpass>);
+    fn render<'rpass>(&self, pass: &mut wgpu::RenderPass<'rpass>);
     fn exit(component: &mut C);
 }
 
@@ -15,10 +15,10 @@ macro_rules! create_app {
             $component:ident => $type:ty
         ),*]
         PASSES => [$(
-            $pass_idx:literal => [$($to_render:ty),*]
+            $pass_idx:literal => [$($to_render:ident),*]
         ),*]
     ) => {
-        use forte_engine::{EngineApp, render::{input::EngineInput, render_engine::RenderEngine}};
+        use forte_engine::{EngineApp, start_render, end_render, pass, render::{input::EngineInput, render_engine::RenderEngine}};
 
         pub struct App {
             render_engine: RenderEngine,
@@ -44,8 +44,20 @@ macro_rules! create_app {
                 $(
                     <$type>::update(self);
                 )*
+                println!("=======");
 
-                // todo render here
+                let mut resources = start_render!(self.render_engine);
+                $(
+                    {
+                        let pass_id = $pass_idx;
+                        let mut pass = pass!(self.render_engine, resources);
+                        $(
+                            self.$to_render.render(&mut pass);
+                        )*
+                        pass;
+                    }
+                )*
+                end_render!(self.render_engine, resources);
 
                 self.render_engine.next_frame();
             }

@@ -11,12 +11,10 @@ impl EngineComponent<App> for TestComponent {
         println!("start");
     }
 
-    fn update(components: &mut App) {
-        println!("update");
-    }
+    fn update(components: &mut App) {}
 
-    fn render<'rpass>(components: &mut App, pass: &mut wgpu::RenderPass<'rpass>) {
-        
+    fn render<'rpass>(&self, pass: &mut wgpu::RenderPass<'rpass>) {
+        println!("render");
     }
 
     fn exit(component: &mut App) {
@@ -28,11 +26,9 @@ create_app!(
     COMPONENTS => [
         test => TestComponent
     ]
-    
+
     PASSES => [
-        0 => [
-            TestComponent
-        ]
+        0 => [test]
     ]
 );
 
