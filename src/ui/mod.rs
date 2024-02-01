@@ -1,4 +1,4 @@
-use crate::render::{pipelines::Pipeline, primitives::{vertices::Vertex, mesh::Mesh}, render_engine::RenderEngine, resources::Handle, textures::textures::Texture};
+use crate::render::{pipelines::Pipeline, primitives::{cameras::Camera, mesh::Mesh, vertices::Vertex}, render_engine::RenderEngine, resources::Handle, textures::textures::Texture};
 
 use self::{elements::UIElement, uniforms::UIInstance};
 
@@ -39,7 +39,7 @@ impl UIEngine {
             "ui", engine, ui_shader::SOURCE,
             &[Vertex::desc(), UIInstance::desc()],
             &[
-                
+                &engine.device.create_bind_group_layout(&Texture::BIND_LAYOUT)
             ]
         );
 
