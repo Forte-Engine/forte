@@ -1,4 +1,5 @@
-use std::{collections::HashMap, marker::PhantomData};
+use fxhash::FxHasher;
+use std::{collections::HashMap, hash::Hasher, marker::PhantomData};
 
 /// A handle to a resource in a resource cache.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -24,14 +25,9 @@ impl<T> ResourceCache<T> {
 
     /// Creates a u64 hash from the given path ID string
     pub fn hash_path(path: String) -> u64 {
-        let mut output: u64 = 0;
-        path.chars().for_each(|char| {
-            let digit = char.to_digit(36);
-            if digit.is_some() {
-                output = output + digit.unwrap() as u64;
-            }
-        });
-        return output;
+        let mut hasher = FxHasher::default();
+        hasher.write(path.as_bytes());
+        return hasher.finish();
     }
 
     /// Returns a handle of the object with the given path ID, calling the given load function if necessary.
