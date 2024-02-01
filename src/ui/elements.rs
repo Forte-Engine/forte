@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use cgmath::Vector2;
 use wgpu::util::DeviceExt;
 
-use crate::render::{render_engine::RenderEngine, resources::Handle, textures::textures::Texture};
+use crate::render::{render_engine::RenderEngine, resources::Handle, textures::Texture};
 
 use super::style::Style;
 

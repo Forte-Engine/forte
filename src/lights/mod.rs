@@ -193,20 +193,8 @@ impl LightEngine {
             );
         }
     }
-}
 
-/// A trait to add light related functions to a render pass.
-pub trait SetupLights<'a, 'b> where 'b: 'a {
-    /// Loads the lights from the given light engine into the current render pass for rendering.
-    /// 
-    /// Arguments:
-    /// * engine: &LightEngine - The light engine that the lights will be loaded from.
-    fn load_lights(&mut self, engine: &'b LightEngine);
-}
-
-/// An implementation of SetupLights for wgpu::RenderPass.
-impl<'a, 'b> SetupLights<'a, 'b> for wgpu::RenderPass<'a> where 'b: 'a {
-    fn load_lights(&mut self, engine: &'b LightEngine) {
-        self.set_bind_group(2, engine.bind_group(), &[]);
+    pub fn load_lights<'rpass>(&'rpass self, pass: &mut wgpu::RenderPass<'rpass>, load_to: u32) {
+        pass.set_bind_group(load_to, self.bind_group(), &[]);
     }
 }

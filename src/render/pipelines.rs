@@ -112,4 +112,16 @@ impl Pipeline {
     pub fn get_layout(&self, index: u32) -> BindGroupLayout {
         self.render_pipeline.get_bind_group_layout(index)
     }
+
+    /// Binds this pipeline to the given render pass.
+    /// 
+    /// Arguments:
+    /// * &self - The pipeline to bind.
+    /// * pass: &mut RenderPass - The render pass to bind this pipeline too.
+    pub fn bind<'rpass>(
+        &'rpass self,
+        pass: &mut wgpu::RenderPass<'rpass>
+    ) {
+        pass.set_pipeline(&self.render_pipeline);
+    }
 }

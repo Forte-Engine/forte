@@ -1,4 +1,4 @@
-use crate::render::{pipelines::Pipeline, primitives::{mesh::Mesh, vertices::Vertex}, render_engine::RenderEngine, resources::Handle, textures::textures::Texture};
+use crate::render::{pipelines::Pipeline, primitives::{mesh::Mesh, vertices::Vertex}, render_engine::RenderEngine, resources::Handle, textures::Texture};
 
 use self::{elements::UIElement, uniforms::UIInstance};
 

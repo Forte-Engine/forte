@@ -1,5 +1,5 @@
 use cgmath::{Rotation3, Quaternion};
-use forte_engine::{end_render, math::transforms::Transform, pass, render::{primitives::{vertices::Vertex, mesh::Mesh, cameras::{CameraController, Camera}, transforms::TransformRaw}, pipelines::Pipeline, resources::Handle, textures::textures::Texture, render_engine::*, input::EngineInput}, run_app, start_render, EngineApp};
+use forte_engine::{end_render, math::transforms::Transform, pass, render::{primitives::{vertices::Vertex, mesh::Mesh, cameras::{CameraController, Camera}, transforms::TransformRaw}, pipelines::Pipeline, resources::Handle, textures::Texture, render_engine::*, input::EngineInput}, run_app, start_render, EngineApp};
 use wgpu::util::DeviceExt;
 
 const VERTICES: &[Vertex] = &[
@@ -122,8 +122,9 @@ impl EngineApp for MainApp {
             self.render_engine.queue.write_buffer(&self.instance_buffer, 0, bytemuck::cast_slice(&instance_data));
 
             // draw
-            pass.prepare_draw(&self.pipeline, &self.camera);
-            pass.draw_mesh(&self.render_engine, &self.mesh, &self.texture, &self.instance_buffer, self.instances.len() as u32);
+            self.pipeline.bind(&mut pass);
+            self.camera.bind(&mut pass, 0);
+            self.render_engine.draw_textured_mesh(&mut pass, &self.mesh, &self.texture, &self.instance_buffer, self.instances.len() as u32);
         }
 
         // end render

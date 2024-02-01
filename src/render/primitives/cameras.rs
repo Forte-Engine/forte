@@ -104,6 +104,14 @@ impl Camera {
         self.uniform.view_proj = self.build_view_projection_matrix().into();
         engine.queue.write_buffer(&self.buffer, 0, bytemuck::cast_slice(&[self.uniform]));
     }
+
+    pub fn bind<'rpass>(
+        &'rpass self,
+        pass: &mut wgpu::RenderPass<'rpass>,
+        index: u32
+    ) {
+        pass.set_bind_group(index, &self.bind_group, &[]);
+    }
 }
 
 /// The camera uniform, this is the rust representation of the camera data is passed to the shaders.

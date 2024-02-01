@@ -1,4 +1,4 @@
-use crate::render::{render_engine::RenderEngine, resources::Handle, textures::textures::Texture};
+use crate::render::{render_engine::RenderEngine, resources::Handle, textures::Texture};
 
 #[derive(Debug)]
 pub struct UICanvas {

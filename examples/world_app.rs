@@ -1,5 +1,5 @@
 use cgmath::{Quaternion, Rotation3};
-use forte_engine::{run_world, render::{pipelines::Pipeline, primitives::{cameras::Camera, mesh::Mesh, transforms::TransformRaw, vertices::Vertex}, render_engine::{DrawMesh, RenderEngine}, resources::Handle, textures::textures::Texture}};
+use forte_engine::{run_world, render::{pipelines::Pipeline, primitives::{cameras::Camera, mesh::Mesh, transforms::TransformRaw, vertices::Vertex}, render_engine::RenderEngine, resources::Handle, textures::Texture}};
 use wgpu::util::DeviceExt;
 
 run_world!(
@@ -15,8 +15,9 @@ run_world!(
                 app.render_engine.queue.write_buffer(&data.3, 0, bytemuck::cast_slice(&instance_data));
 
                 // draw mesh
-                pass.prepare_draw(&app.pipeline, &app.camera);
-                pass.draw_mesh(&app.render_engine, &data.0, &data.1, &data.3, data.2.len() as u32);
+                app.pipeline.bind(pass);
+                app.camera.bind(pass, 0);
+                app.render_engine.draw_textured_mesh(pass, &data.0, &data.1, &data.3, data.2.len() as u32);
             },
             REMOVED => |_: &mut TestWorldApp, _: &mut Node| {}
         }

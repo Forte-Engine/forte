@@ -2,7 +2,7 @@ use std::time::SystemTime;
 
 use winit::window::Window;
 
-use crate::render::{primitives::{mesh::Mesh, cameras::Camera, vertices::Vertex}, textures::{textures::Texture, depth_textures::DepthTexture}, pipelines::Pipeline, resources::{ResourceCache, Handle}, files::Files};
+use crate::render::{primitives::{mesh::Mesh, vertices::Vertex}, textures::{Texture, depth_textures::DepthTexture}, resources::{ResourceCache, Handle}, files::Files};
 
 /// A struct with all required information to render to a given window.
 /// 
@@ -174,7 +174,7 @@ impl RenderEngine {
     
     /// Creates a mesh from the given vertices and indices
     /// 
-    /// Arguments
+    /// Arguments:
     /// * path - The path ID so that this mesh can be identified in the cache
     /// * vertices - An array of vertices for the mesh
     /// * indices - An array of indices for the mesh
@@ -185,98 +185,42 @@ impl RenderEngine {
             Mesh::from_raw(&self.device, vertices, indices) 
         }) 
     }
-}
 
-/// A set of functions for RenderPass to setup cameras and draw mesh.
-pub trait DrawMesh<'a, 'b> where 'b: 'a {
-    /// Prepares to draw mesh by setting up a pipeline and a camera to render with.
+    /// Draws the given mesh and texture handles with the given instance buffer and count.
     /// 
     /// Arguments:
-    /// * pipeline: &Pipeline - The pipeline that will be used to render.
-    /// * camera: &Camera - The camera to be used to render.
-    fn prepare_draw(
-        &mut self,
-        pipeline: &'b Pipeline,
-        camera: &'b Camera,
-    );
-
-    /// Draws a mesh to this render pass.
-    /// 
-    /// Arguments:
-    /// * engine: &RenderEngine - The render engine that will be used to draw this.
-    /// * mesh: &Handle<Mesh> - A handle to the mesh to be drawn.
-    /// * texture: &Handle<Texture> - A handle to the texture the mesh will be drawn with.
-    /// * instance_buf: &wgpu::Buffer - The instances buffer to draw the mesh with.
-    /// * instance_count: u32 - The number of instances in the above buffer.
-    fn draw_mesh(
-        &mut self,
-        engine: &'b RenderEngine,
-        mesh: &'b Handle<Mesh>,
-        texture: &'b Handle<Texture>,
-        instance_buf: &'b wgpu::Buffer,
-        instance_count: u32
-    );
-
-    /// Draws a mesh to this render pass only using its vertices buffer.
-    /// 
-    /// Arguments:
-    /// * engine: &RenderEngine - The render engine that will be used to draw this.
-    /// * mesh: &Handle<Mesh> - A handle to the mesh to be drawn.  Only vertices will be used, the indices buffer will be disregarded.
-    /// * texture: &Handle<Texture> - A handle to the texture to draw the mesh with.
-    /// * instance_buf: &wgpu::Buffer - The instances buffer to draw the mesh with.
-    /// * instance_count: u32 - The number of instances in the above buffer.
-    fn draw_list_mesh(
-        &mut self,
-        engine: &'b RenderEngine,
-        mesh: &'b Handle<Mesh>,
-        texture: &'b Handle<Texture>,
-        instance_buf: &'b wgpu::Buffer,
-        instance_count: u32
-    );
-}
-
-/// An implementation of DrawMesh for wgpu::RenderPass.  See documentation for more information.
-impl<'a, 'b> DrawMesh<'a, 'b> for wgpu::RenderPass<'a> where 'b: 'a {
-    fn draw_mesh(
-        &mut self,
-        engine: &'b RenderEngine,
-        mesh: &'b Handle<Mesh>,
-        texture: &'b Handle<Texture>,
-        instance_buf: &'b wgpu::Buffer,
+    /// &self - The render engine to draw with.
+    /// mesh: &Handle<Mesh> - A handle to the mesh to draw.
+    /// texture: &Handle<Texture> - A handle to the texture to draw.
+    /// instance_buffer: &wgpu::Buffer - The buffer to draw.
+    pub fn draw_textured_mesh<'rpass>(
+        &'rpass self,
+        pass: &mut wgpu::RenderPass<'rpass>,
+        mesh: &'rpass Handle<Mesh>,
+        texture: &'rpass Handle<Texture>,
+        instance_buffer: &'rpass wgpu::Buffer,
         instance_count: u32
     ) {
-        let texture = engine.texture_cache.get(texture).unwrap();
-        let mesh = engine.mesh_cache.get(mesh).unwrap();
-        self.set_bind_group(1, &texture.bind_group, &[]);
-        self.set_vertex_buffer(0, mesh.vertex_buf.slice(..));
-        self.set_vertex_buffer(1, instance_buf.slice(..));
-        self.set_index_buffer(mesh.index_buf.slice(..), wgpu::IndexFormat::Uint16);
-        self.draw_indexed(0..mesh.num_indices, 0, 0..instance_count);
+        self.texture(texture).bind(pass, 1);
+        self.mesh(mesh).draw(pass, instance_buffer, instance_count);
     }
 
-    fn prepare_draw(
-        &mut self,
-        pipeline: &'b Pipeline,
-        camera: &'b Camera,
-    ) {
-        self.set_pipeline(&pipeline.render_pipeline);
-        self.set_bind_group(0, &camera.bind_group, &[]);
-    }
-
-    fn draw_list_mesh(
-        &mut self,
-        engine: &'b RenderEngine,
-        mesh: &'b Handle<Mesh>,
-        texture: &'b Handle<Texture>,
-        instance_buf: &'b wgpu::Buffer,
+    /// Draws the given mesh and texture handles with the given instance buffer and count, however, the mesh will be drawn as a list mesh.
+    /// 
+    /// Arguments:
+    /// &self - The render engine to draw with.
+    /// mesh: &Handle<Mesh> - A handle to the mesh to draw.
+    /// texture: &Handle<Texture> - A handle to the texture to draw.
+    /// instance_buffer: &wgpu::Buffer - The buffer to draw.
+    pub fn draw_textured_list_mesh<'rpass>(
+        &'rpass self,
+        pass: &mut wgpu::RenderPass<'rpass>,
+        mesh: &'rpass Handle<Mesh>,
+        texture: &'rpass Handle<Texture>,
+        instance_buffer: &'rpass wgpu::Buffer,
         instance_count: u32
     ) {
-        let texture = engine.texture_cache.get(texture).unwrap();
-        let mesh = engine.mesh_cache.get(mesh).unwrap();
-        self.set_bind_group(1, &texture.bind_group, &[]);
-        self.set_vertex_buffer(0, mesh.vertex_buf.slice(..));
-        self.set_vertex_buffer(1, instance_buf.slice(..));
-        self.set_index_buffer(mesh.index_buf.slice(..), wgpu::IndexFormat::Uint16);
-        self.draw(0 .. mesh.num_vertices, 0..instance_count);
+        self.texture(texture).bind(pass, 1);
+        self.mesh(mesh).draw_list(pass, instance_buffer, instance_count);
     }
 }
