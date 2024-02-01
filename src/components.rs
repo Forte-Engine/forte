@@ -14,6 +14,9 @@ macro_rules! create_app {
         COMPONENTS => [$(
             $component:ident => $type:ty
         ),*]
+        PASSES => [$(
+            $pass_idx:literal => [$($to_render:ty),*]
+        ),*]
     ) => {
         use forte_engine::{EngineApp, render::{input::EngineInput, render_engine::RenderEngine}};
 

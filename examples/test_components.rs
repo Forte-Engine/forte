@@ -28,6 +28,12 @@ create_app!(
     COMPONENTS => [
         test => TestComponent
     ]
+    
+    PASSES => [
+        0 => [
+            TestComponent
+        ]
+    ]
 );
 
 fn main() { run_app::<App>() }

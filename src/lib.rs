@@ -39,8 +39,6 @@ pub trait EngineApp {
 /// When an exit is request the loop will stop and then the exit function will be called before cleaning up all resources used by the render engine and this function.
 /// When an input is received through the event loop is first passed to the render engine for initial processing before the apps input function is called.
 pub fn run_app<T: EngineApp + 'static>() {
-    env_logger::init();
-
     // setup window and event loop
     info!("Creating window and event loop...");
     let event_loop = EventLoop::new().unwrap();
