@@ -89,4 +89,12 @@ impl TransformRaw {
     pub fn buffer_from_generic(engine: &RenderEngine, inputs: &[Transform]) -> wgpu::Buffer {
         Self::buffer_from_raw(engine, &Self::from_generic_array(inputs))
     }
+
+    pub fn update_buffer_raw(engine: &RenderEngine, buffer: &wgpu::Buffer, inputs: &[Self]) {
+        engine.queue.write_buffer(buffer, 0, bytemuck::cast_slice(inputs));
+    }
+
+    pub fn update_buffer_generic(engine: &RenderEngine, buffer: &wgpu::Buffer, inputs: &[Transform]) {
+        Self::update_buffer_raw(engine, buffer, &Self::from_generic_array(inputs));
+    }
 }

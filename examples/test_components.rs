@@ -1,4 +1,4 @@
-use cgmath::{Quaternion, Rotation3};
+use cgmath::Quaternion;
 use forte_engine::{components::EngineComponent, create_app, math::{quaternion::QuaternionExt, transforms::Transform}, primitives::{cameras::Camera, mesh::Mesh, textures::Texture, transforms::TransformRaw, vertices::Vertex}, render::pipelines::Pipeline, run_app, utils::resources::Handle};
 
 const VERTICES: &[Vertex] = &[
@@ -77,10 +77,12 @@ impl EngineComponent<App> for TestComponent {
 
     fn update(components: &mut App) {
         components.test.camera.update(&mut components.render_engine);
-        let transform = components.test.instances.get_mut(0).unwrap();
-        transform.rotation = Quaternion::from_angle_y(cgmath::Deg(components.render_engine.time_since_start * 45.0)) * Quaternion::from_angle_z(cgmath::Deg(components.render_engine.time_since_start * 45.0));
-        let instance_data = components.test.instances.iter().map(TransformRaw::from_generic).collect::<Vec<_>>();
-        components.render_engine.queue.write_buffer(&components.test.instance_buffer, 0, bytemuck::cast_slice(&instance_data));
+        TransformRaw::update_buffer_generic(&components.render_engine, &components.test.instance_buffer, &[
+            Transform {
+                rotation: Quaternion::euler_deg(0.0, components.render_engine.time_since_start * 45.0, components.render_engine.time_since_start * 45.0),
+                ..Default::default()
+            }
+        ]);
     }
 
     fn render<'rpass>(&'rpass self, render_engine: &'rpass RenderEngine, pass: &mut wgpu::RenderPass<'rpass>) {
