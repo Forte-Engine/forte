@@ -1,8 +1,6 @@
-use std::marker::PhantomData;
-
 use cgmath::{Quaternion, Vector2, Vector3, Zero};
 
-use crate::{component_app::{EngineComponent, HasRenderEngine}, math::{quaternion::QuaternionExt, transforms::Transform}, primitives::{mesh::Mesh, textures::Texture, transforms::TransformRaw, vertices::Vertex}, render::{pipelines::Pipeline, render_engine::RenderEngine}, utils::resources::Handle};
+use crate::{component_app::EngineComponent, math::{quaternion::QuaternionExt, transforms::Transform}, primitives::{mesh::Mesh, textures::Texture, transforms::TransformRaw, vertices::Vertex}, render::{pipelines::Pipeline, render_engine::RenderEngine}, utils::resources::Handle};
 
 use self::{elements::{ElementInfo, UIElement}, style::PositionSetting, uniforms::UIInstance};
 
@@ -28,12 +26,11 @@ const INDICES: &[u16] = &[
 
 // The engine for rendering UI.
 #[derive(Debug)]
-pub struct UIEngine<T: HasRenderEngine> {
+pub struct UIEngine {
     pipeline: Pipeline,
     mesh: Handle<Mesh>,
     default_texture: Handle<Texture>,
-    pub elements: Vec<UIElement>,
-    phantom: PhantomData<T>
+    pub elements: Vec<UIElement>
 }
 
 // Some info used for rendering
@@ -48,7 +45,7 @@ pub struct UIRenderInfo {
 #[include_wgsl_oil::include_wgsl_oil("ui.wgsl")]
 mod ui_shader {}
 
-impl <T: HasRenderEngine> EngineComponent<T> for UIEngine<T> {
+impl EngineComponent<&mut RenderEngine> for UIEngine {
     fn create(engine: &mut RenderEngine) -> Self {
         let pipeline = Pipeline::new(
             "ui", engine, ui_shader::SOURCE,
@@ -61,19 +58,21 @@ impl <T: HasRenderEngine> EngineComponent<T> for UIEngine<T> {
         let mesh = engine.create_mesh("ui_engine_mesh", VERTICES, INDICES);
         let default_texture = engine.create_texture("ui.blank", include_bytes!("empty.png"));
 
-        Self { pipeline, mesh, default_texture, elements: Vec::new(), phantom: PhantomData::default() }
+        Self { pipeline, mesh, default_texture, elements: Vec::new() }
+    }
+
+    fn update(&mut self, render_engine: &mut RenderEngine) {
+        let size = Vector2 { x: render_engine.size.width as f32, y: render_engine.size.height as f32 };
+        update_ui(render_engine, &UIRenderInfo { position: Vector2::zero(), size, display_size: size }, &self.elements, 0.5);
     }
 
     fn render<'rpass>(&'rpass self, render_engine: &'rpass RenderEngine, pass: &mut wgpu::RenderPass<'rpass>) {
-        let size = Vector2 { x: render_engine.size.width as f32, y: render_engine.size.height as f32 };
-        update_ui(render_engine, &UIRenderInfo { position: Vector2::zero(), size, display_size: size }, &self.elements, 0.5);
         pass.set_pipeline(&self.pipeline.render_pipeline);
         render_ui(render_engine, pass, render_engine.mesh(&self.mesh), render_engine.texture(&self.default_texture), &self.elements);
     }
 
-    fn start(_: &mut T) {}
-    fn update(_: &mut T) {}
-    fn exit(_: &mut T) {}
+    fn start(&mut self, _: &mut RenderEngine) {}
+    fn exit(&mut self, _: &mut RenderEngine) {}
 }
 
 fn render_ui<'rpass>(engine: &'rpass RenderEngine, pass: &mut wgpu::RenderPass<'rpass>, mesh: &'rpass Mesh, default_texture: &'rpass Texture, elements: &'rpass [UIElement]) {

@@ -2,10 +2,10 @@ use forte_engine::{component_app::EngineComponent, create_app, run_app, ui::{ele
 
 pub struct TestComponent {}
 
-impl EngineComponent<App> for TestComponent {
-    fn start(app: &mut App) {
+impl EngineComponent<(&mut RenderEngine, &mut UIEngine)> for TestComponent {
+    fn start(&mut self, (engine, ui): (&mut RenderEngine, &mut UIEngine)) {
         let mut a = UIElement::container(
-            app.render_engine(), 
+            &engine, 
             Style { 
                 width: Sizing::Px(200.0), 
                 height: Sizing::Px(200.0), 
@@ -16,7 +16,7 @@ impl EngineComponent<App> for TestComponent {
             }
         );
         a.children.push(UIElement::container(
-            app.render_engine(), 
+            &engine, 
             Style {
                 width: Sizing::Px(100.0), 
                 height: Sizing::Px(100.0), 
@@ -29,19 +29,19 @@ impl EngineComponent<App> for TestComponent {
                 ..Default::default() 
             }
         ));
-        app.ui_engine.elements.push(a);
+        ui.elements.push(a);
     }
 
     fn create(_: &mut RenderEngine) -> Self { Self {} }
-    fn update(_: &mut App) {}
+    fn update(&mut self, _: (&mut RenderEngine, &mut UIEngine)) {}
     fn render<'rpass>(&'rpass self, _: &'rpass RenderEngine, _: &mut wgpu::RenderPass<'rpass>) {}
-    fn exit(_: &mut App) {}
+    fn exit(&mut self, _: (&mut RenderEngine, &mut UIEngine)) {}
 }
 
 create_app!(
     COMPONENTS => [
-        ui_engine => UIEngine<App>,
-        test => TestComponent
+        ui_engine => UIEngine => [render_engine],
+        test => TestComponent => [render_engine, ui_engine]
     ]
 
     PASSES => [

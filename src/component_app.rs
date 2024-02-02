@@ -1,11 +1,11 @@
 use crate::render::render_engine::RenderEngine;
 
-pub trait EngineComponent<C> {
+pub trait EngineComponent<T> {
     fn create(engine: &mut RenderEngine) -> Self;
-    fn start(components: &mut C);
-    fn update(components: &mut C);
+    fn start(&mut self, other: T);
+    fn update(&mut self, other: T);
     fn render<'rpass>(&'rpass self, render_engine: &'rpass RenderEngine, pass: &mut wgpu::RenderPass<'rpass>);
-    fn exit(component: &mut C);
+    fn exit(&mut self, other: T);
 }
 
 pub trait HasRenderEngine {
@@ -17,7 +17,7 @@ pub trait HasRenderEngine {
 macro_rules! create_app {
     (
         COMPONENTS => [$(
-            $component:ident => $type:ty
+            $component:ident => $type:ty => [$($param:ident),*]
         ),*]
         PASSES => [$(
             $pass_idx:literal => [$($to_render:ident),*]
@@ -28,12 +28,6 @@ macro_rules! create_app {
         pub struct App {
             render_engine: RenderEngine,
             $($component: $type,)*
-        }
-
-        // mark the app as has render engine
-        impl HasRenderEngine for App {
-            fn render_engine(&self) -> &RenderEngine { &self.render_engine }
-            fn render_engine_mut(&mut self) -> &mut RenderEngine { &mut self.render_engine }
         }
 
         impl EngineApp for App {
@@ -47,13 +41,13 @@ macro_rules! create_app {
 
             fn start(&mut self) {
                 $(
-                    <$type>::start(self);
+                    <$type>::start(&mut self.$component, ($(&mut self.$param),*));
                 )*
             }
 
             fn update(&mut self) {
                 $(
-                    <$type>::update(self);
+                    <$type>::update(&mut self.$component, ($(&mut self.$param),*));
                 )*
 
                 let mut resources = start_render!(self.render_engine);
@@ -78,7 +72,7 @@ macro_rules! create_app {
 
             fn exit(&mut self) {
                 $(
-                    <$type>::exit(self);
+                    <$type>::exit(&mut self.$component, ($(&mut self.$param),*));
                 )*
             }
         }
