@@ -51,6 +51,7 @@ pub fn run_app<T: EngineApp + 'static>() {
     // create app
     info!("Creating app...");
     let mut app = T::create(engine);
+    app.start();
 
     info!("Starting event loop...");
     let _ = event_loop.run(move |event, target| {

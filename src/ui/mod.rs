@@ -1,6 +1,10 @@
-use crate::{primitives::{mesh::Mesh, textures::Texture, vertices::Vertex}, render::{pipelines::Pipeline, render_engine::RenderEngine}, utils::resources::Handle};
+use std::marker::PhantomData;
 
-use self::{elements::UIElement, uniforms::UIInstance};
+use cgmath::{Quaternion, Vector2, Vector3, Zero};
+
+use crate::{component_app::{EngineComponent, HasRenderEngine}, math::{quaternion::QuaternionExt, transforms::Transform}, primitives::{mesh::Mesh, textures::Texture, transforms::TransformRaw, vertices::Vertex}, render::{pipelines::Pipeline, render_engine::RenderEngine}, utils::resources::Handle};
+
+use self::{elements::{ElementInfo, UIElement}, style::PositionSetting, uniforms::UIInstance};
 
 pub mod canvas;
 pub mod elements;
@@ -24,18 +28,28 @@ const INDICES: &[u16] = &[
 
 // The engine for rendering UI.
 #[derive(Debug)]
-pub struct UIEngine {
+pub struct UIEngine<T: HasRenderEngine> {
     pipeline: Pipeline,
     mesh: Handle<Mesh>,
-    elements: Vec<UIElement>
+    default_texture: Handle<Texture>,
+    pub elements: Vec<UIElement>,
+    phantom: PhantomData<T>
+}
+
+// Some info used for rendering
+#[derive(Debug)]
+pub struct UIRenderInfo {
+    pub position: Vector2<f32>,
+    pub size: Vector2<f32>,
+    pub display_size: Vector2<f32>
 }
 
 /// The UI shader.
 #[include_wgsl_oil::include_wgsl_oil("ui.wgsl")]
 mod ui_shader {}
 
-impl UIEngine {
-    pub fn new(engine: &mut RenderEngine) -> Self {
+impl <T: HasRenderEngine> EngineComponent<T> for UIEngine<T> {
+    fn create(engine: &mut RenderEngine) -> Self {
         let pipeline = Pipeline::new(
             "ui", engine, ui_shader::SOURCE,
             &[Vertex::desc(), UIInstance::desc()],
@@ -45,43 +59,144 @@ impl UIEngine {
         );
 
         let mesh = engine.create_mesh("ui_engine_mesh", VERTICES, INDICES);
+        let default_texture = engine.create_texture("ui.blank", include_bytes!("empty.png"));
 
-        Self { pipeline, mesh, elements: Vec::new() }
+        Self { pipeline, mesh, default_texture, elements: Vec::new(), phantom: PhantomData::default() }
     }
+
+    fn render<'rpass>(&'rpass self, render_engine: &'rpass RenderEngine, pass: &mut wgpu::RenderPass<'rpass>) {
+        let size = Vector2 { x: render_engine.size.width as f32, y: render_engine.size.height as f32 };
+        update_ui(render_engine, &UIRenderInfo { position: Vector2::zero(), size, display_size: size }, &self.elements, 0.5);
+        pass.set_pipeline(&self.pipeline.render_pipeline);
+        render_ui(render_engine, pass, render_engine.mesh(&self.mesh), render_engine.texture(&self.default_texture), &self.elements);
+    }
+
+    fn start(_: &mut T) {}
+    fn update(_: &mut T) {}
+    fn exit(_: &mut T) {}
 }
 
-pub trait DrawUI<'a, 'b> where 'b: 'a {
-    fn prepare_ui(
-        &mut self,
-        ui_engine: &'b UIEngine
-    );
+fn render_ui<'rpass>(engine: &'rpass RenderEngine, pass: &mut wgpu::RenderPass<'rpass>, mesh: &'rpass Mesh, default_texture: &'rpass Texture, elements: &'rpass [UIElement]) {
+    elements.iter().for_each(|element| {
+        let texture = match &element.info {
+            ElementInfo::Image(texture) => engine.texture(texture),
+            _ => default_texture
+        };
+        pass.set_bind_group(0, &texture.bind_group, &[]);
+        pass.set_vertex_buffer(0, mesh.vertex_buf.slice(..));
+        pass.set_vertex_buffer(1, element.buffer.slice(..));
+        pass.set_index_buffer(mesh.index_buf.slice(..), wgpu::IndexFormat::Uint16);
+        pass.draw_indexed(0 .. mesh.num_indices, 0, 0 .. 1);
 
-    fn draw_element(
-        &mut self,
-        render_engine: &'b RenderEngine,
-        ui_engine: &'b UIEngine,
-        element: &'b UIElement
-    );
+        render_ui(engine, pass, mesh, default_texture, &element.children);
+    });
 }
 
-impl<'a, 'b> DrawUI<'a, 'b> for wgpu::RenderPass<'a> where 'b: 'a {
-    fn prepare_ui(
-        &mut self,
-        ui_engine: &'b UIEngine
-    ) {
-        self.set_pipeline(&ui_engine.pipeline.render_pipeline);
+fn update_ui(engine: &RenderEngine, info: &UIRenderInfo, elements: &[UIElement], layer: f32) {
+    elements.iter().for_each(|element| {
+        // calculate size and position of this element
+        let (position, size) = calculate_position_size(element, info);
+        let new_info = UIRenderInfo { position, size, display_size: info.display_size };
+
+        // generate transform of UI
+        let transform = Transform {
+            position: Vector3 { 
+                x: 2.0 * ((position.x + (size.x * 0.5)) / info.display_size.x) - 1.0,
+                y: 2.0 * ((position.y + (size.y * 0.5)) / info.display_size.y) - 1.0,
+                z: layer
+            },
+            rotation: Quaternion::euler_deg_z(element.style.rotation),
+            scale: Vector3 {
+                x: size.x / info.display_size.x,
+                y: size.y / info.display_size.y,
+                z: 0.0
+            }
+        };
+
+        // create instance
+        let raw_transform = TransformRaw::from_generic(&transform).model;
+        let instance = UIInstance([
+            raw_transform[0],
+            raw_transform[1],
+            raw_transform[2],
+            raw_transform[3],
+            element.style.color.to_array(),
+            element.style.border_color.to_array(),
+            [
+                element.style.round.size(&info.display_size) / f32::max(size.x, size.y),
+                element.style.border.size(&info.display_size) / f32::max(size.x, size.y),
+                0.0,
+                0.0
+            ]
+        ]);
+
+        // save instance info
+        engine.queue.write_buffer(&element.buffer, 0, bytemuck::cast_slice(&instance.0));
+
+        // update children
+        update_ui(engine, &new_info, &element.children, layer - 0.05);
+    });
+}
+
+// calculates the position and size of the given element by taking in its own node and some render info about its parent and display size
+fn calculate_position_size(element: &UIElement, info: &UIRenderInfo) -> (Vector2<f32>, Vector2<f32>) {
+    // calculate my size
+    let size = element.min_size(&info.display_size);
+
+    // calculate initial position
+    let mut position =  Vector2 { 
+        x: info.position.x + ((info.size.x - size.x) * 0.5), 
+        y: info.position.y + ((info.size.y - size.y) * 0.5)
+    };
+
+    // if left positioning given, position based on above info, an offset, and the positioning type
+    if element.style.left_set() {
+        let offset = element.style.left.size(&info.display_size);
+        match element.style.position_setting {
+            PositionSetting::Parent => {
+                position.x = info.position.x + offset;
+            },
+            PositionSetting::Absolute => {
+                position.x = offset;
+            }
+        }
+    } 
+    // otherwise, do the same for the right
+    else if element.style.right_set() {
+        let offset = element.style.right.size(&info.display_size);
+        match element.style.position_setting {
+            PositionSetting::Parent => {
+                position.x = info.position.x + info.size.x - size.x - offset;
+            },
+            PositionSetting::Absolute => {
+                position.x = info.display_size.x - size.x - offset;
+            }
+        }
     }
 
-    fn draw_element(
-        &mut self,
-        render_engine: &'b RenderEngine,
-        ui_engine: &'b UIEngine,
-        element: &'b UIElement
-    ) {
-        let mesh = render_engine.mesh(&ui_engine.mesh);
-        self.set_vertex_buffer(0, mesh.vertex_buf.slice(..));
-        self.set_vertex_buffer(1, element.buffer.slice(..));
-        self.set_index_buffer(mesh.index_buf.slice(..), wgpu::IndexFormat::Uint16);
-        self.draw_indexed(0 .. mesh.num_indices, 0, 0 .. 1);
+    // do top bottom positioning
+    if element.style.top_set() {
+        let offset = element.style.top.size(&info.display_size);
+        match element.style.position_setting {
+            PositionSetting::Parent => {
+                position.y = info.position.y + info.size.y - size.y - offset;
+            },
+            PositionSetting::Absolute => {
+                position.y = info.display_size.y - size.y - offset;
+            }
+        }
+    } else if element.style.bottom_set() {
+        let offset = element.style.bottom.size(&info.display_size);
+        position.y = offset;
+        match element.style.position_setting {
+            PositionSetting::Parent => {
+                position.y = info.position.y + offset;
+            },
+            PositionSetting::Absolute => {
+                position.y = offset;
+            }
+        }
     }
+
+    (position, size)
 }

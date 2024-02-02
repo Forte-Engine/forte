@@ -8,6 +8,11 @@ pub trait EngineComponent<C> {
     fn exit(component: &mut C);
 }
 
+pub trait HasRenderEngine {
+    fn render_engine(&self) -> &RenderEngine;
+    fn render_engine_mut(&mut self) -> &mut RenderEngine;
+}
+
 #[macro_export]
 macro_rules! create_app {
     (
@@ -18,11 +23,17 @@ macro_rules! create_app {
             $pass_idx:literal => [$($to_render:ident),*]
         ),*]
     ) => {
-        use forte_engine::{EngineApp, start_render, end_render, pass, render::{input::EngineInput, render_engine::RenderEngine}};
+        use forte_engine::{EngineApp, start_render, end_render, pass, component_app::HasRenderEngine, render::{input::EngineInput, render_engine::RenderEngine}};
 
         pub struct App {
             render_engine: RenderEngine,
             $($component: $type,)*
+        }
+
+        // mark the app as has render engine
+        impl HasRenderEngine for App {
+            fn render_engine(&self) -> &RenderEngine { &self.render_engine }
+            fn render_engine_mut(&mut self) -> &mut RenderEngine { &mut self.render_engine }
         }
 
         impl EngineApp for App {
