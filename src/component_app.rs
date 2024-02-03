@@ -64,7 +64,7 @@ macro_rules! create_app {
                 // run each render pass in the order given
                 $(
                     {
-                        // create the render pass
+                        // create color attachment for this pass
                         let pass_id = $pass_idx;
                         let color_attachment = wgpu::RenderPassColorAttachment {
                             view: &resources.view,
@@ -81,6 +81,8 @@ macro_rules! create_app {
                                 }
                             },
                         };
+
+                        // create the render pass
                         let mut pass = resources.encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                             label: Some("Render Pass"),
                             color_attachments: &[Some(color_attachment)],
