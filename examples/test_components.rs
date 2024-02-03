@@ -39,14 +39,14 @@ impl EngineComponent<(&mut RenderEngine, &mut UIEngine)> for TestComponent {
 }
 
 create_app!(
-    COMPONENTS => [
-        ui_engine => UIEngine => [render_engine],
-        test => TestComponent => [render_engine, ui_engine]
-    ]
+    APP {
+        ui_engine: UIEngine[render_engine],
+        test: TestComponent[render_engine, ui_engine]
+    }
 
-    PASSES => [
-        0 => [ui_engine]
-    ]
+    PASSES {
+        0: [ui_engine]
+    }
 );
 
 fn main() { run_app::<App>() }

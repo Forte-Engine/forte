@@ -16,12 +16,12 @@ pub trait HasRenderEngine {
 #[macro_export]
 macro_rules! create_app {
     (
-        COMPONENTS => [$(
-            $component:ident => $type:ty => [$($param:ident),*]
-        ),*]
-        PASSES => [$(
-            $pass_idx:literal => [$($to_render:ident),*]
-        ),*]
+        APP {$(
+            $component:ident: $type:ty[$($param:ident),*]
+        ),*}
+        PASSES {$(
+            $pass_idx:literal: [$($to_render:ident),*]
+        ),*}
     ) => {
         use forte_engine::{EngineApp, start_render, end_render, pass, component_app::HasRenderEngine, render::{input::EngineInput, render_engine::RenderEngine}};
 
