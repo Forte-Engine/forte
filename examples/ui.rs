@@ -1,4 +1,4 @@
-use forte_engine::{component_app::EngineComponent, create_app, run_app, ui::{elements::UIElement, style::{Color, PositionSetting, Sizing, Style}, UIEngine}};
+use forte_engine::{component_app::EngineComponent, create_app, render::depth_info::DepthInfo, run_app, ui::{elements::UIElement, style::{Color, PositionSetting, Sizing, Style}, UIEngine}};
 
 pub struct TestComponent {}
 
@@ -39,13 +39,18 @@ impl EngineComponent<(&mut RenderEngine, &mut UIEngine)> for TestComponent {
 }
 
 create_app!(
+    CLEAR_COLOR = wgpu::Color { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
+
     APP {
         ui_engine: UIEngine[render_engine],
         test: TestComponent[render_engine, ui_engine]
-    }
+    },
 
     PASSES {
-        0: [ui_engine]
+        0: {
+            DEPTH: Standard,
+            COMPONENTS: [ui_engine]
+        }
     }
 );
 

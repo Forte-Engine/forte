@@ -16,14 +16,18 @@ pub trait HasRenderEngine {
 #[macro_export]
 macro_rules! create_app {
     (
+        CLEAR_COLOR = $color:expr,
         APP {$(
             $component:ident: $type:ty[$($param:ident),*]
-        ),*}
+        ),*},
         PASSES {$(
-            $pass_idx:literal: [$($to_render:ident),*]
+            $pass_idx:literal: {
+                DEPTH: $depth:ident,
+                COMPONENTS: [$($to_render:ident),*]
+            }
         ),*}
     ) => {
-        use forte_engine::{EngineApp, start_render, end_render, pass, component_app::HasRenderEngine, render::{input::EngineInput, render_engine::RenderEngine}};
+        use forte_engine::{EngineApp, start_render, end_render, pass, component_app::HasRenderEngine, render::{input::EngineInput, render_engine::RenderEngine, render_utils}};
 
         pub struct App {
             render_engine: RenderEngine,
@@ -31,6 +35,7 @@ macro_rules! create_app {
         }
 
         impl EngineApp for App {
+            // Takes in a render engine and creates each component individually in the order listed, then saves them into a new instance of App.
             fn create(mut render_engine: RenderEngine) -> Self {
                 $(let $component = <$type>::create(&mut render_engine);)*
                 Self {
@@ -39,37 +44,66 @@ macro_rules! create_app {
                 }
             }
 
+            // Starts app components of the App.
             fn start(&mut self) {
                 $(
                     <$type>::start(&mut self.$component, ($(&mut self.$param),*));
                 )*
             }
 
+            // Updates App components, then performs the render steps in the order given.
             fn update(&mut self) {
+                // Run update
                 $(
                     <$type>::update(&mut self.$component, ($(&mut self.$param),*));
                 )*
 
-                let mut resources = start_render!(self.render_engine);
+                // start the render
+                let resources = render_utils::prepare_render(&self.render_engine);
+                let mut resources = if resources.is_ok() { resources.unwrap() } else { return };
+
+                // run each render pass in the order given
                 $(
                     {
+                        // create the render pass
                         let pass_id = $pass_idx;
-                        let mut pass = pass!(self.render_engine, resources);
+                        let color_attachment = wgpu::RenderPassColorAttachment {
+                            view: &resources.view,
+                            resolve_target: None,
+                            ops: wgpu::Operations {
+                                load: wgpu::LoadOp::Clear($color),
+                                store: wgpu::StoreOp::Store,
+                            },
+                        };
+                        let mut pass = resources.encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                            label: Some("Render Pass"),
+                            color_attachments: &[Some(color_attachment)],
+                            depth_stencil_attachment: DepthInfo::$depth.to_depth_stencil(&self.render_engine),
+                            occlusion_query_set: None,
+                            timestamp_writes: None,
+                        });
+
+                        // call all members of this pass' render functions
                         $(
                             self.$to_render.render(&self.render_engine, &mut pass);
                         )*
-                        pass;
                     }
                 )*
-                end_render!(self.render_engine, resources);
 
+                // end the render
+                render_utils::finalize_render(&mut self.render_engine, resources);
+
+                // call next frame, will be replaced later
                 self.render_engine.next_frame();
             }
 
+            // takes all input from the event loop, will be processed later
             fn input(&mut self, input: EngineInput) {}
             
+            // passes all resize from the event loop to the render engine
             fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) { self.render_engine.resize(new_size); }
 
+            // calls all the exit functions of the components in the order given
             fn exit(&mut self) {
                 $(
                     <$type>::exit(&mut self.$component, ($(&mut self.$param),*));
