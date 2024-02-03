@@ -1,4 +1,3 @@
-pub mod depth_info;
 pub mod input;
 pub mod pipelines;
 pub mod render_engine;

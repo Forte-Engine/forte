@@ -22,7 +22,6 @@ macro_rules! create_app {
         ),*},
         PASSES {$(
             $pass_idx:literal: {
-                DEPTH: $depth:ident,
                 COMPONENTS: [$($to_render:ident),*]
             }
         ),*}
@@ -70,15 +69,29 @@ macro_rules! create_app {
                         let color_attachment = wgpu::RenderPassColorAttachment {
                             view: &resources.view,
                             resolve_target: None,
-                            ops: wgpu::Operations {
-                                load: wgpu::LoadOp::Clear($color),
-                                store: wgpu::StoreOp::Store,
+                            ops: if pass_id == 0 {
+                                wgpu::Operations {
+                                    load: wgpu::LoadOp::Clear($color),
+                                    store: wgpu::StoreOp::Store,
+                                }
+                            } else {
+                                wgpu::Operations {
+                                    load: wgpu::LoadOp::Load,
+                                    store: wgpu::StoreOp::Store,
+                                }
                             },
                         };
                         let mut pass = resources.encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                             label: Some("Render Pass"),
                             color_attachments: &[Some(color_attachment)],
-                            depth_stencil_attachment: DepthInfo::$depth.to_depth_stencil(&self.render_engine),
+                            depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
+                                view: &self.render_engine.depth_texture.view,
+                                depth_ops: Some(wgpu::Operations {
+                                    load: wgpu::LoadOp::Clear(1.0),
+                                    store: wgpu::StoreOp::Store
+                                }),
+                                stencil_ops: None
+                            }),
                             occlusion_query_set: None,
                             timestamp_writes: None,
                         });

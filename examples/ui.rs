@@ -1,4 +1,4 @@
-use forte_engine::{component_app::EngineComponent, create_app, render::depth_info::DepthInfo, run_app, ui::{elements::UIElement, style::{Color, PositionSetting, Sizing, Style}, UIEngine}};
+use forte_engine::{component_app::EngineComponent, create_app, run_app, ui::{elements::UIElement, style::{Color, PositionSetting, Sizing, Style}, UIEngine}};
 
 pub struct TestComponent {}
 
@@ -48,7 +48,6 @@ create_app!(
 
     PASSES {
         0: {
-            DEPTH: Standard,
             COMPONENTS: [ui_engine]
         }
     }
