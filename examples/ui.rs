@@ -1,4 +1,5 @@
 use forte_engine::{component_app::EngineComponent, create_app, run_app, ui::{elements::UIElement, style::{Color, PositionSetting, Sizing, Style}, UIEngine}};
+use glyphon::{Attrs, Metrics};
 
 pub struct TestComponent {}
 
@@ -30,6 +31,26 @@ impl EngineComponent<(&mut RenderEngine, &mut UIEngine)> for TestComponent {
             }
         ));
         ui.elements.push(a);
+
+        let text = UIElement::text(
+            &engine, 
+            ui,
+            Style {
+                width: Sizing::Px(180.0), 
+                height: Sizing::Px(50.0), 
+                position_setting: PositionSetting::Parent,
+                top: Sizing::Px(10.0),
+                left: Sizing::Px(10.0),
+                border: Sizing::Px(5.0),
+                round: Sizing::Px(10.0),
+                color: Color { red: 0.0, green: 1.0, blue: 0.0, alpha: 1.0 },
+                ..Default::default() 
+            }, 
+            "Hello world!",
+            Attrs::new().family(glyphon::Family::SansSerif),
+            Metrics::new(30.0, 42.0)
+        );
+        ui.elements.push(text);
     }
 
     fn create(_: &mut RenderEngine) -> Self { Self {} }

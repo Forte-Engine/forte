@@ -37,8 +37,7 @@ pub struct UIEngine {
     font_system: FontSystem,
     font_cache: SwashCache,
     text_atlas: TextAtlas,
-    text_renderer: TextRenderer,
-    text_buffer: glyphon::Buffer
+    text_renderer: TextRenderer
 }
 
 // Some info used for rendering
@@ -67,48 +66,30 @@ impl EngineComponent<&mut RenderEngine> for UIEngine {
         let default_texture = engine.create_texture("ui.blank", include_bytes!("empty.png"));
 
         // setup text resources
-        let mut font_system = FontSystem::new();
+        let font_system = FontSystem::new();
         let font_cache = SwashCache::new();
         let mut text_atlas = TextAtlas::new(&engine.device, &engine.queue, engine.config.format);
         let text_renderer = TextRenderer::new(&mut text_atlas, &engine.device, MultisampleState::default(), None);
-
-        // setup test text buffer
-        let mut text_buffer = Buffer::new(&mut font_system, Metrics::new(30.0, 42.0));
-        text_buffer.set_size(&mut font_system, engine.size.width as f32, engine.size.height as f32);
-        text_buffer.set_text(&mut font_system, "Hello world!", Attrs::new().family(Family::SansSerif), Shaping::Advanced);
-        text_buffer.shape_until_scroll(&mut font_system);
-
+        
         Self { 
             pipeline, mesh, 
             default_texture, elements: Vec::new(), 
             font_system, font_cache, 
-            text_atlas, text_renderer,
-            text_buffer
+            text_atlas, text_renderer
         }
     }
 
     fn update(&mut self, render_engine: &mut RenderEngine) {
         let size = Vector2 { x: render_engine.size.width as f32, y: render_engine.size.height as f32 };
-        update_ui(render_engine, &UIRenderInfo { position: Vector2::zero(), size, display_size: size }, &self.elements, 0.5);
+        let mut text_areas = Vec::<TextArea>::new();
+        update_ui(render_engine, &UIRenderInfo { position: Vector2::zero(), size, display_size: size }, &self.elements, &mut text_areas, 0.5);
         let _ = self.text_renderer.prepare(
             &render_engine.device,
             &render_engine.queue,
             &mut self.font_system,
             &mut self.text_atlas,
             Resolution { width: render_engine.config.width, height: render_engine.config.height },
-            [TextArea {
-                buffer: &self.text_buffer,
-                left: 10.0,
-                top: 10.0,
-                scale: 1.0,
-                bounds: TextBounds {
-                    left: 0,
-                    top: 0,
-                    right: 600,
-                    bottom: 160,
-                },
-                default_color: Color::rgb(255, 255, 255),
-            }],
+            text_areas,
             &mut self.font_cache
         );
     }
@@ -139,7 +120,7 @@ fn render_ui<'rpass>(engine: &'rpass RenderEngine, pass: &mut wgpu::RenderPass<'
     });
 }
 
-fn update_ui(engine: &RenderEngine, info: &UIRenderInfo, elements: &[UIElement], layer: f32) {
+fn update_ui<'a>(engine: &RenderEngine, info: &UIRenderInfo, elements: &'a [UIElement], text_areas: &mut Vec<TextArea<'a>>, layer: f32) {
     elements.iter().for_each(|element| {
         // calculate size and position of this element
         let (position, size) = calculate_position_size(element, info);
@@ -180,8 +161,28 @@ fn update_ui(engine: &RenderEngine, info: &UIRenderInfo, elements: &[UIElement],
         // save instance info
         engine.queue.write_buffer(&element.buffer, 0, bytemuck::cast_slice(&instance.0));
 
+        // if text, add text area
+        match &element.info {
+            ElementInfo::Text(buffer) => {
+                text_areas.push(TextArea {
+                    buffer,
+                    left: 20.0,
+                    top: 10.0,
+                    scale: 1.0,
+                    bounds: TextBounds {
+                        left: 0,
+                        top: 0,
+                        right: 600,
+                        bottom: 160,
+                    },
+                    default_color: Color::rgb(255, 255, 255),
+                });
+            },
+            _ => {}
+        }
+
         // update children
-        update_ui(engine, &new_info, &element.children, layer - 0.05);
+        update_ui(engine, &new_info, &element.children, text_areas, layer - 0.05);
     });
 }
 

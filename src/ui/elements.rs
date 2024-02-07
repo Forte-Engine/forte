@@ -5,14 +5,15 @@ use wgpu::util::DeviceExt;
 
 use crate::{primitives::textures::Texture, render::render_engine::RenderEngine, utils::resources::Handle};
 
-use super::style::Style;
+use super::{style::Style, UIEngine};
 
 /// The possible states for different UI elements.
 #[derive(Debug, Default)]
 pub enum ElementInfo {
     #[default]
     Container,
-    Image(Handle<Texture>)
+    Image(Handle<Texture>),
+    Text(glyphon::Buffer)
 }
 
 /// A wrapper for a UI element info and style.
@@ -44,4 +45,28 @@ impl UIElement {
 
     /// Creates a new image element with the given render engine, image and style.
     pub fn image(render_engine: &RenderEngine, style: Style, texture: Handle<Texture>) -> Self { Self { style, info: ElementInfo::Image(texture), buffer: ui_buffer(render_engine), children: Vec::new() } }
+
+    /// Creates a new text element with the given render engine.
+    pub fn text(
+        render_engine: &RenderEngine, 
+        ui_engine: &mut UIEngine,
+        style: Style, 
+        text: impl Into<String>,
+        attrs: glyphon::Attrs,
+        metrics: glyphon::Metrics
+    ) -> Self { 
+        // build text buffer from input
+        let mut buffer = glyphon::Buffer::new(&mut ui_engine.font_system, metrics);
+        buffer.set_size(&mut ui_engine.font_system, render_engine.size.width as f32, render_engine.size.height as f32);
+        buffer.set_text(&mut ui_engine.font_system, &text.into(), attrs, glyphon::Shaping::Advanced);
+        buffer.shape_until_scroll(&mut ui_engine.font_system);
+
+        // return new element
+        Self { 
+            style, 
+            info: ElementInfo::Text(buffer), 
+            buffer: ui_buffer(render_engine), 
+            children: Vec::new()
+        }
+    }
 }
