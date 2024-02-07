@@ -6,9 +6,7 @@ use crate::{component_app::EngineComponent, math::{quaternion::QuaternionExt, tr
 
 use self::{elements::{ElementInfo, UIElement}, style::PositionSetting, uniforms::UIInstance};
 
-pub mod canvas;
 pub mod elements;
-pub mod groups;
 pub mod uniforms;
 pub mod style;
 

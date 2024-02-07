@@ -76,6 +76,13 @@ impl TransformRaw {
         transforms.iter().map(Self::from_generic).collect::<Vec<TransformRaw>>()
     }
 
+    /// Creates a buffer from an array of `TransformRaw`s.
+    /// 
+    /// Arguments:
+    /// * engine: &RenderEngine - The render engine to create the buffer with.
+    /// * inputs: &[TransformRaw] - The array to be converted into a buffer.
+    /// 
+    /// Returns a new buffer created from the inputs.
     pub fn buffer_from_raw(engine: &RenderEngine, inputs: &[Self]) -> wgpu::Buffer {
         engine.device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor {
@@ -86,14 +93,33 @@ impl TransformRaw {
         )
     }
 
+    /// Creates a buffer from an array of generic `Transform`s.
+    /// 
+    /// Arguments:
+    /// * engine: &RenderEngine - The render engine to create the buffer with.
+    /// * inputs: &[Transform] - The array to be converted into a buffer.
+    /// 
+    /// Returns a new buffer created from the inputs.
     pub fn buffer_from_generic(engine: &RenderEngine, inputs: &[Transform]) -> wgpu::Buffer {
         Self::buffer_from_raw(engine, &Self::from_generic_array(inputs))
     }
 
+    /// Updates a given buffer with a given array of `TransformRaw`s.
+    /// 
+    /// Arguments:
+    /// * engine: &RenderEngine - The render engine to create the buffer with.
+    /// * buffer: &wgpu::Buffer - The buffer to update.
+    /// * inputs: &[TransformRaw] - The array to update the buffer with.
     pub fn update_buffer_raw(engine: &RenderEngine, buffer: &wgpu::Buffer, inputs: &[Self]) {
         engine.queue.write_buffer(buffer, 0, bytemuck::cast_slice(inputs));
     }
 
+    /// Updates a given buffer with a given array of `Transform`s.
+    /// 
+    /// Arguments:
+    /// * engine: &RenderEngine - The render engine to create the buffer with.
+    /// * buffer: &wgpu::Buffer - The buffer to update.
+    /// * inputs: &[Transform] - The array to update the buffer with.
     pub fn update_buffer_generic(engine: &RenderEngine, buffer: &wgpu::Buffer, inputs: &[Transform]) {
         Self::update_buffer_raw(engine, buffer, &Self::from_generic_array(inputs));
     }

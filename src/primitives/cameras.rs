@@ -104,6 +104,12 @@ impl Camera {
         engine.queue.write_buffer(&self.buffer, 0, bytemuck::cast_slice(&[self.uniform]));
     }
 
+    /// Binds this camera to the given render pass at the given bind group index.
+    /// 
+    /// Arguments:
+    /// * &self - The camera to be bound.
+    /// * pass: &mut wgpu::RenderPass - The render pass to bind too.
+    /// * index: u32 - The index in the bind group to bind too.
     pub fn bind<'rpass>(
         &'rpass self,
         pass: &mut wgpu::RenderPass<'rpass>,

@@ -35,6 +35,7 @@ pub trait EngineApp {
 /// The run_app function effectively creates an runs the app given as a generic argument.
 /// 
 /// This function will automatically call the create function on startup just after the window is created and render engine initialized.
+/// This function will automatically call the start function just after the above create step.
 /// Then the once per frame, the apps update and render functions will be called.
 /// When an exit is request the loop will stop and then the exit function will be called before cleaning up all resources used by the render engine and this function.
 /// When an input is received through the event loop is first passed to the render engine for initial processing before the apps input function is called.

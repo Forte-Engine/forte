@@ -1,8 +1,10 @@
+/// The raw data based to the UI shader to describe a `UIElement`.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct UIInstance(pub [[f32; 4]; 7]);
 
 impl UIInstance {
+    /// Returns the standard buffer layout of this `UIInstance`.
     pub fn desc() -> wgpu::VertexBufferLayout<'static> {
         use std::mem;
         wgpu::VertexBufferLayout {
