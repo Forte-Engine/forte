@@ -13,7 +13,7 @@ pub enum ElementInfo {
     #[default]
     Container,
     Image(Handle<Texture>),
-    Text(glyphon::Buffer)
+    Text(glyphon::Buffer, glyphon::Color)
 }
 
 /// A wrapper for a UI element info and style.
@@ -53,6 +53,7 @@ impl UIElement {
         style: Style, 
         text: impl Into<String>,
         attrs: glyphon::Attrs,
+        color: glyphon::Color,
         metrics: glyphon::Metrics
     ) -> Self { 
         // build text buffer from input
@@ -64,7 +65,7 @@ impl UIElement {
         // return new element
         Self { 
             style, 
-            info: ElementInfo::Text(buffer), 
+            info: ElementInfo::Text(buffer, color), 
             buffer: ui_buffer(render_engine), 
             children: Vec::new()
         }

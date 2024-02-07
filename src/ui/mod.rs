@@ -127,10 +127,12 @@ fn update_ui<'a>(engine: &RenderEngine, info: &UIRenderInfo, elements: &'a [UIEl
         let new_info = UIRenderInfo { position, size, display_size: info.display_size };
 
         // generate transform of UI
+        let pos_x = size.x * 0.5 + position.x;
+        let pos_y = size.y * 0.5 + position.y;
         let transform = Transform {
             position: Vector3 { 
-                x: 2.0 * ((position.x + (size.x * 0.5)) / info.display_size.x) - 1.0,
-                y: 2.0 * ((position.y + (size.y * 0.5)) / info.display_size.y) - 1.0,
+                x: 2.0 * (pos_x / info.display_size.x) - 1.0,
+                y: 2.0 * (pos_y / info.display_size.y) - 1.0,
                 z: layer
             },
             rotation: Quaternion::euler_deg_z(element.style.rotation),
@@ -163,19 +165,19 @@ fn update_ui<'a>(engine: &RenderEngine, info: &UIRenderInfo, elements: &'a [UIEl
 
         // if text, add text area
         match &element.info {
-            ElementInfo::Text(buffer) => {
+            ElementInfo::Text(buffer, color) => {
                 text_areas.push(TextArea {
                     buffer,
-                    left: 20.0,
-                    top: 10.0,
+                    left: position.x + 5.0,
+                    top: info.display_size.y - position.y - size.y,
                     scale: 1.0,
                     bounds: TextBounds {
                         left: 0,
                         top: 0,
-                        right: 600,
-                        bottom: 160,
+                        right: size.x as i32,
+                        bottom: size.y as i32,
                     },
-                    default_color: Color::rgb(255, 255, 255),
+                    default_color: *color
                 });
             },
             _ => {}

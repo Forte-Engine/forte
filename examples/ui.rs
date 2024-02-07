@@ -48,6 +48,7 @@ impl EngineComponent<(&mut RenderEngine, &mut UIEngine)> for TestComponent {
             }, 
             "Hello world!",
             Attrs::new().family(glyphon::Family::SansSerif),
+            glyphon::Color::rgb(255, 255, 255),
             Metrics::new(30.0, 42.0)
         );
         ui.elements.push(text);
