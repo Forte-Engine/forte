@@ -51,7 +51,8 @@ impl EngineApp for MainApp {
             &[
                 &engine.device.create_bind_group_layout(&Camera::BIND_LAYOUT),
                 &engine.device.create_bind_group_layout(&Texture::BIND_LAYOUT),
-            ]
+            ],
+            true
         );
 
         // generate camera

@@ -1,4 +1,6 @@
 use cgmath::{Quaternion, Vector2, Vector3, Zero};
+use glyphon::*;
+use wgpu::MultisampleState;
 
 use crate::{component_app::EngineComponent, math::{quaternion::QuaternionExt, transforms::Transform}, primitives::{mesh::Mesh, textures::Texture, transforms::TransformRaw, vertices::Vertex}, render::{pipelines::Pipeline, render_engine::RenderEngine}, utils::resources::Handle};
 
@@ -25,12 +27,18 @@ const INDICES: &[u16] = &[
 ];
 
 // The engine for rendering UI.
-#[derive(Debug)]
 pub struct UIEngine {
     pipeline: Pipeline,
     mesh: Handle<Mesh>,
     default_texture: Handle<Texture>,
-    pub elements: Vec<UIElement>
+    pub elements: Vec<UIElement>,
+
+    // text
+    font_system: FontSystem,
+    font_cache: SwashCache,
+    text_atlas: TextAtlas,
+    text_renderer: TextRenderer,
+    text_buffer: glyphon::Buffer
 }
 
 // Some info used for rendering
@@ -52,23 +60,63 @@ impl EngineComponent<&mut RenderEngine> for UIEngine {
             &[Vertex::desc(), UIInstance::desc()],
             &[
                 &engine.device.create_bind_group_layout(&Texture::BIND_LAYOUT)
-            ]
+            ], false
         );
 
         let mesh = engine.create_mesh("ui_engine_mesh", VERTICES, INDICES);
         let default_texture = engine.create_texture("ui.blank", include_bytes!("empty.png"));
 
-        Self { pipeline, mesh, default_texture, elements: Vec::new() }
+        // setup text resources
+        let mut font_system = FontSystem::new();
+        let font_cache = SwashCache::new();
+        let mut text_atlas = TextAtlas::new(&engine.device, &engine.queue, engine.config.format);
+        let text_renderer = TextRenderer::new(&mut text_atlas, &engine.device, MultisampleState::default(), None);
+
+        // setup test text buffer
+        let mut text_buffer = Buffer::new(&mut font_system, Metrics::new(30.0, 42.0));
+        text_buffer.set_size(&mut font_system, engine.size.width as f32, engine.size.height as f32);
+        text_buffer.set_text(&mut font_system, "Hello world!", Attrs::new().family(Family::SansSerif), Shaping::Advanced);
+        text_buffer.shape_until_scroll(&mut font_system);
+
+        Self { 
+            pipeline, mesh, 
+            default_texture, elements: Vec::new(), 
+            font_system, font_cache, 
+            text_atlas, text_renderer,
+            text_buffer
+        }
     }
 
     fn update(&mut self, render_engine: &mut RenderEngine) {
         let size = Vector2 { x: render_engine.size.width as f32, y: render_engine.size.height as f32 };
         update_ui(render_engine, &UIRenderInfo { position: Vector2::zero(), size, display_size: size }, &self.elements, 0.5);
+        let _ = self.text_renderer.prepare(
+            &render_engine.device,
+            &render_engine.queue,
+            &mut self.font_system,
+            &mut self.text_atlas,
+            Resolution { width: render_engine.config.width, height: render_engine.config.height },
+            [TextArea {
+                buffer: &self.text_buffer,
+                left: 10.0,
+                top: 10.0,
+                scale: 1.0,
+                bounds: TextBounds {
+                    left: 0,
+                    top: 0,
+                    right: 600,
+                    bottom: 160,
+                },
+                default_color: Color::rgb(255, 255, 255),
+            }],
+            &mut self.font_cache
+        );
     }
 
     fn render<'rpass>(&'rpass self, render_engine: &'rpass RenderEngine, pass: &mut wgpu::RenderPass<'rpass>) {
         pass.set_pipeline(&self.pipeline.render_pipeline);
         render_ui(render_engine, pass, render_engine.mesh(&self.mesh), render_engine.texture(&self.default_texture), &self.elements);
+        let _ = self.text_renderer.render(&self.text_atlas, pass);
     }
 
     fn start(&mut self, _: &mut RenderEngine) {}

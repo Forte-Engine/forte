@@ -41,8 +41,9 @@ impl RenderEngine {
             &Handle { 
                 hash: ResourceCache::<Texture>::hash_path(path.into()), 
                 data: Default::default() 
-            }).unwrap() 
-        }
+            }
+        ).unwrap() 
+    }
 
     /// Get a mesh from the mesh cache using a handle.
     /// 

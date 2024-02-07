@@ -48,7 +48,8 @@ create_app!(
 
     PASSES {
         0: {
-            COMPONENTS: [ui_engine]
+            COMPONENTS: [ui_engine],
+            DEPTH: false
         }
     }
 );

@@ -16,6 +16,7 @@ cgmath = "0.18"
 anyhow = "1.0"
 include-wgsl-oil = "0.2.4"
 fxhash = "0.2.1"
+glyphon = "0.5.0"
 
 [dependencies.image]
 version = "0.24"

@@ -22,7 +22,8 @@ macro_rules! create_app {
         ),*},
         PASSES {$(
             $pass_idx:literal: {
-                COMPONENTS: [$($to_render:ident),*]
+                COMPONENTS: [$($to_render:ident),*],
+                DEPTH: $depth:literal
             }
         ),*}
     ) => {
@@ -86,14 +87,18 @@ macro_rules! create_app {
                         let mut pass = resources.encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                             label: Some("Render Pass"),
                             color_attachments: &[Some(color_attachment)],
-                            depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
-                                view: &self.render_engine.depth_texture.view,
-                                depth_ops: Some(wgpu::Operations {
-                                    load: wgpu::LoadOp::Clear(1.0),
-                                    store: wgpu::StoreOp::Store
-                                }),
-                                stencil_ops: None
-                            }),
+                            depth_stencil_attachment: 
+                                if !$depth { None } 
+                                else { 
+                                    Some(wgpu::RenderPassDepthStencilAttachment {
+                                        view: &self.render_engine.depth_texture.view,
+                                        depth_ops: Some(wgpu::Operations {
+                                            load: wgpu::LoadOp::Clear(1.0),
+                                            store: wgpu::StoreOp::Store
+                                        }),
+                                        stencil_ops: None
+                                    })
+                                },
                             occlusion_query_set: None,
                             timestamp_writes: None,
                         });

@@ -42,7 +42,7 @@ impl WorldApp for TestWorldApp {
             &[
                 &render_engine.device.create_bind_group_layout(&Camera::BIND_LAYOUT),
                 &render_engine.device.create_bind_group_layout(&Texture::BIND_LAYOUT),
-            ]
+            ], true
         );
 
         // create camera stuffs

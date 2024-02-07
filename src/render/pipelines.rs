@@ -42,7 +42,8 @@ impl Pipeline {
         engine: &RenderEngine, 
         shader_code: &str, 
         buffers: &[wgpu::VertexBufferLayout], 
-        layouts: &[&wgpu::BindGroupLayout]
+        layouts: &[&wgpu::BindGroupLayout],
+        use_depth: bool
     ) -> Self {
         // create shader
         let shader = engine.device.create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -86,13 +87,15 @@ impl Pipeline {
                     unclipped_depth: false,
                     conservative: false,
                 },
-                depth_stencil: Some(wgpu::DepthStencilState {
-                    format: DepthTexture::DEPTH_FORMAT,
-                    depth_write_enabled: true,
-                    depth_compare: wgpu::CompareFunction::Less,
-                    stencil: wgpu::StencilState::default(),
-                    bias: wgpu::DepthBiasState::default()
-                }),
+                depth_stencil: if !use_depth { None } else {
+                    Some(wgpu::DepthStencilState {
+                        format: DepthTexture::DEPTH_FORMAT,
+                        depth_write_enabled: true,
+                        depth_compare: wgpu::CompareFunction::Less,
+                        stencil: wgpu::StencilState::default(),
+                        bias: wgpu::DepthBiasState::default()
+                    })
+                },
                 multisample: wgpu::MultisampleState {
                     count: 1,
                     mask: !0,

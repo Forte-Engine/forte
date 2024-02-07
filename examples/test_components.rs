@@ -62,7 +62,8 @@ impl EngineComponent<(&mut RenderEngine, &mut UIEngine)> for TestComponent {
                 &[
                     &engine.device.create_bind_group_layout(&Camera::BIND_LAYOUT),
                     &engine.device.create_bind_group_layout(&Texture::BIND_LAYOUT),
-                ]
+                ],
+                true
             ),
             instance_buffer: TransformRaw::buffer_from_generic(engine, &instances),
             mesh: engine.create_mesh("test", VERTICES, INDICES),
@@ -133,10 +134,12 @@ create_app!(
 
     PASSES {
         0: {
-            COMPONENTS: [test]
+            COMPONENTS: [test],
+            DEPTH: true
         },
         1: {
-            COMPONENTS: [ui_engine]
+            COMPONENTS: [ui_engine],
+            DEPTH: false
         }
     }
 );
