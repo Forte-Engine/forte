@@ -1,5 +1,7 @@
-use egui::{ClippedPrimitive, FontDefinitions, TexturesDelta};
+use cgmath::Point2;
+use egui::{pos2, vec2, ClippedPrimitive, FontDefinitions, TexturesDelta};
 use egui_wgpu::ScreenDescriptor;
+use winit::keyboard::KeyCode;
 
 use crate::{component_app::EngineComponent, inputs::Inputs, render::render_engine::RenderEngine};
 
@@ -65,12 +67,89 @@ impl EngineComponent<(&mut RenderEngine, &mut Inputs)> for EguiEngine {
         if let Some(cursor_icon) = helpers::egui_to_winit_cursor_icon(output.platform_output.cursor_icon)
         {
             engine.window.set_cursor_visible(true);
-            // if self.pointer_pos.is_some() {
+            if inputs.mouse_position().is_some() {
                 engine.window.set_cursor_icon(cursor_icon);
-            // }
+            }
         } else {
             engine.window.set_cursor_visible(false);
         }
+
+        // update mouse position
+        let position = inputs.mouse_position().unwrap_or(&Point2 { x: 0.0, y: 0.0 });
+        self.raw_input.events.push(egui::Event::PointerMoved(pos2(position.x, position.y)));
+
+        // call mouse button press'
+        inputs.mouse_buttons_pressed().iter().for_each(|button| {
+            // convert winit mouse button to egui pointer button
+            let button = match button {
+                winit::event::MouseButton::Left => Some(egui::PointerButton::Primary),
+                winit::event::MouseButton::Right => Some(egui::PointerButton::Secondary),
+                winit::event::MouseButton::Middle => Some(egui::PointerButton::Middle),
+                winit::event::MouseButton::Back => Some(egui::PointerButton::Extra1),
+                winit::event::MouseButton::Forward => Some(egui::PointerButton::Extra2),
+                winit::event::MouseButton::Other(_) => None,
+            };
+            let button = if button.is_some() { button.unwrap() } else { return };
+
+            // pass pointer button event to egui
+            self.raw_input.events.push(egui::Event::PointerButton {
+                pos: pos2(position.x, position.y), 
+                button, 
+                pressed: true, 
+                modifiers: self.raw_input.modifiers
+            });
+        });
+
+        // call mouse button release's
+        inputs.mouse_buttons_just_released().iter().for_each(|button| {
+            // convert winit mouse button to egui pointer button
+            let button = match button {
+                winit::event::MouseButton::Left => Some(egui::PointerButton::Primary),
+                winit::event::MouseButton::Right => Some(egui::PointerButton::Secondary),
+                winit::event::MouseButton::Middle => Some(egui::PointerButton::Middle),
+                winit::event::MouseButton::Back => Some(egui::PointerButton::Extra1),
+                winit::event::MouseButton::Forward => Some(egui::PointerButton::Extra2),
+                winit::event::MouseButton::Other(_) => None,
+            };
+            let button = if button.is_some() { button.unwrap() } else { return };
+
+            // pass pointer button event to egui
+            self.raw_input.events.push(egui::Event::PointerButton {
+                pos: pos2(position.x, position.y), 
+                button, 
+                pressed: false, 
+                modifiers: self.raw_input.modifiers
+            });
+        });
+
+        // call mouse wheel inputs
+        self.raw_input.events.push(egui::Event::MouseWheel { 
+            unit: egui::MouseWheelUnit::Point, 
+            delta: vec2(inputs.mouse_scroll_delta().x, inputs.mouse_scroll_delta().y), 
+            modifiers: self.raw_input.modifiers 
+        });
+
+        // call key events
+        inputs.keys_just_pressed().iter().for_each(|key_code| {
+            // pass event ot egui
+            let key = helpers::key_from_key_code(*key_code);
+            let key = if key.is_some() { key.unwrap() } else { return };
+            self.raw_input.events.push(egui::Event::Key { key, physical_key: helpers::key_from_key_code(*key_code), pressed: true, repeat: false, modifiers: self.raw_input.modifiers });
+        });
+        inputs.keys_just_released().iter().for_each(|key_code| {
+            // pass event to egui
+            let key = helpers::key_from_key_code(*key_code);
+            let key = if key.is_some() { key.unwrap() } else { return };
+            self.raw_input.events.push(egui::Event::Key { key, physical_key: helpers::key_from_key_code(*key_code), pressed: false, repeat: false, modifiers: self.raw_input.modifiers });
+
+            // if input can be converted to text, pass that along to egui
+            let text = helpers::key_code_to_text(key_code);
+            if text.is_some() {
+                let text = text.unwrap();
+                let text = if inputs.is_key_down(&KeyCode::ShiftLeft) || inputs.is_key_down(&KeyCode::ShiftRight) { text.to_uppercase() } else { text.to_lowercase() };
+                self.raw_input.events.push(egui::Event::Text(text.to_string()));
+            }
+        });
 
         // create paint jobs
         let paint_jobs = self.context.tessellate(output.shapes, 1.0);

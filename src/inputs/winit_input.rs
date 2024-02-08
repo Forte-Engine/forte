@@ -23,7 +23,7 @@ impl EngineInput {
     /// * event: &WindowEvent - The winit `WindowEvent` that occured.
     pub fn from_winit_input(event: &WindowEvent) -> Option<Self> {
         match event {
-            // habndle mouse move inputs
+            // handle mouse move inputs
             WindowEvent::CursorMoved { position, .. } => Some(
                     Self::MouseMove(
                         Point2 { 

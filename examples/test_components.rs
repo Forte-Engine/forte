@@ -33,7 +33,8 @@ pub struct TestComponent {
     texture: Handle<Texture>, 
     camera: Camera,
     instances: Vec<Transform>,
-    instance_buffer: wgpu::Buffer
+    instance_buffer: wgpu::Buffer,
+    test: String
 }
 
 impl EngineComponent<(&mut RenderEngine, &mut UIEngine, &mut EguiEngine)> for TestComponent {
@@ -68,7 +69,8 @@ impl EngineComponent<(&mut RenderEngine, &mut UIEngine, &mut EguiEngine)> for Te
             instance_buffer: TransformRaw::buffer_from_generic(engine, &instances),
             mesh: engine.create_mesh("test", VERTICES, INDICES),
             texture: engine.create_texture("test", include_bytes!("rotating_cube.png")),
-            camera, instances
+            camera, instances,
+            test: "".to_string()
         }
     }
 
@@ -116,9 +118,10 @@ impl EngineComponent<(&mut RenderEngine, &mut UIEngine, &mut EguiEngine)> for Te
         // test window
         egui::Window::new("Test")
             .show(&egui.context, |ui| { 
-                ui.label("Hi from test window!"); 
-                if ui.button("Test button").clicked() {
-                    println!("Test button clicked!");
+                ui.label("Hi from test window!");
+                ui.text_edit_singleline(&mut self.test); 
+                if ui.button("Search").clicked() {
+                    println!("Search for {}", self.test);
                 }
             });
     }

@@ -7,9 +7,10 @@ use crate::inputs::winit_input::EngineInput;
 
 pub mod winit_input;
 
-// todo getters
-
+#[derive(Default)]
 pub struct Inputs {
+    raw_inputs: Vec<EngineInput>,
+
     mouse_position: Option<Point2<f32>>,
     mouse_scroll_delta: Option<Point2<f32>>,
 
@@ -24,23 +25,10 @@ pub struct Inputs {
 
 impl Inputs {
 
-    /// Returns a new instance of `Inputs`
+    /// Returns a new instance of `Inputs`. Just a wrapper of `default()`.
     /// 
     /// This is meant to be called from your engine core and distributed from that core.
-    pub fn new() -> Self { 
-        Self { 
-            mouse_position: None,
-            mouse_scroll_delta: None,
-
-            key_codes: HashMap::new(),
-            keys_just_pressed: Vec::new(),
-            keys_just_released: Vec::new(),
-
-            mouse_buttons: HashMap::new(),
-            mouse_buttons_just_pressed: Vec::new(),
-            mouse_buttons_just_released: Vec::new()
-        } 
-    }
+    pub fn new() -> Self { Self::default() }
 
     /// Handles the given input and applies the input to this `Inputs` object.
     /// 
@@ -88,7 +76,9 @@ impl Inputs {
                     }
                 }
             },
-        }
+        };
+
+        self.raw_inputs.push(input);
     }
 
     /// Resets this `Inputs` object for the next frame.
@@ -96,11 +86,33 @@ impl Inputs {
     /// This is meant to be called by the engine core directly.
     pub fn reset(&mut self) {
         self.mouse_scroll_delta = None;
+        self.raw_inputs.clear();
         self.mouse_buttons_just_pressed.clear();
         self.mouse_buttons_just_released.clear();
         self.keys_just_pressed.clear();
         self.keys_just_released.clear();
     }
+
+    /// Returns all `EngineInput`s from the last frame
+    pub fn raw_inputs(&self) -> &Vec<EngineInput> { &self.raw_inputs }
+
+    /// Returns all pressed mouse buttons
+    pub fn mouse_buttons_pressed(&self) -> Vec<&MouseButton> { self.mouse_buttons.iter().filter(|a| *a.1).map(|a| a.0).collect() }
+
+    /// Returns all mouse buttons just pressed
+    pub fn mouse_buttons_just_pressed(&self) -> &Vec<MouseButton> { &self.mouse_buttons_just_pressed }
+
+    /// Returns all mouse buttons just released
+    pub fn mouse_buttons_just_released(&self) -> &Vec<MouseButton> { &self.mouse_buttons_just_released }
+
+    /// Returns all pressed keyboard inputs
+    pub fn keys_pressed(&self) -> Vec<&KeyCode> { self.key_codes.iter().filter(|a| *a.1).map(|a| a.0).collect() }
+    
+    /// Returns all keys just pressed
+    pub fn keys_just_pressed(&self) -> &Vec<KeyCode> { &self.keys_just_pressed }
+    
+    /// Returns all keys just released
+    pub fn keys_just_released(&self) -> &Vec<KeyCode> { &self.keys_just_released }
 
     /// Returns the current mouse position if we have one.
     pub fn mouse_position(&self) -> Option<&Point2<f32>> { self.mouse_position.as_ref() }
