@@ -92,7 +92,7 @@ impl EngineComponent<&mut RenderEngine> for UIEngine {
         );
     }
 
-    fn render<'rpass>(&'rpass self, render_engine: &'rpass RenderEngine, pass: &mut wgpu::RenderPass<'rpass>) {
+    fn render<'rpass>(&'rpass mut self, render_engine: &'rpass RenderEngine, pass: &mut wgpu::RenderPass<'rpass>) {
         pass.set_pipeline(&self.pipeline.render_pipeline);
         render_ui(render_engine, pass, render_engine.mesh(&self.mesh), render_engine.texture(&self.default_texture), &self.elements);
         let _ = self.text_renderer.render(&self.text_atlas, pass);

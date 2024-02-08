@@ -14,7 +14,7 @@ pub trait EngineComponent<T> {
     fn update(&mut self, other: T);
 
     /// Called when this component is called to render during its render pass defined in the created `App`.
-    fn render<'rpass>(&'rpass self, render_engine: &'rpass RenderEngine, pass: &mut wgpu::RenderPass<'rpass>);
+    fn render<'rpass>(&'rpass mut self, render_engine: &'rpass RenderEngine, pass: &mut wgpu::RenderPass<'rpass>);
 
     /// Called when the engine exits.
     fn exit(&mut self, other: T);

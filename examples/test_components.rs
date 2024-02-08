@@ -1,5 +1,5 @@
 use cgmath::Quaternion;
-use forte_engine::{component_app::EngineComponent, create_app, math::{quaternion::QuaternionExt, transforms::Transform}, primitives::{cameras::Camera, mesh::Mesh, textures::Texture, transforms::TransformRaw, vertices::Vertex}, render::pipelines::Pipeline, run_app, ui::{elements::UIElement, style::{Color, PositionSetting, Sizing, Style}, UIEngine}, utils::resources::Handle};
+use forte_engine::{component_app::EngineComponent, create_app, egui::EguiEngine, math::{quaternion::QuaternionExt, transforms::Transform}, primitives::{cameras::Camera, mesh::Mesh, textures::Texture, transforms::TransformRaw, vertices::Vertex}, render::pipelines::Pipeline, run_app, ui::{elements::UIElement, style::{Color, PositionSetting, Sizing, Style}, UIEngine}, utils::resources::Handle};
 
 const VERTICES: &[Vertex] = &[
     Vertex { position: [ 0.5, -0.5, -0.5], tex_coords: [0.4131759, 0.00759614], normal: [0.0, 0.0, 0.0] },
@@ -36,7 +36,7 @@ pub struct TestComponent {
     instance_buffer: wgpu::Buffer
 }
 
-impl EngineComponent<(&mut RenderEngine, &mut UIEngine)> for TestComponent {
+impl EngineComponent<(&mut RenderEngine, &mut UIEngine, &mut EguiEngine)> for TestComponent {
 
     fn create(engine: &mut RenderEngine) -> Self { 
         // generate camera
@@ -72,7 +72,7 @@ impl EngineComponent<(&mut RenderEngine, &mut UIEngine)> for TestComponent {
         }
     }
 
-    fn start(&mut self, (engine, ui): (&mut RenderEngine, &mut UIEngine)) {
+    fn start(&mut self, (engine, ui, _): (&mut RenderEngine, &mut UIEngine, &mut EguiEngine)) {
         let mut a = UIElement::container(
             &engine, 
             Style { 
@@ -103,7 +103,7 @@ impl EngineComponent<(&mut RenderEngine, &mut UIEngine)> for TestComponent {
         ui.elements.push(a);
     }
 
-    fn update(&mut self, (engine, _): (&mut RenderEngine, &mut UIEngine)) {
+    fn update(&mut self, (engine, _, egui): (&mut RenderEngine, &mut UIEngine, &mut EguiEngine)) {
         // update rotation
         TransformRaw::update_buffer_generic(
             engine, &self.instance_buffer, 
@@ -112,16 +112,25 @@ impl EngineComponent<(&mut RenderEngine, &mut UIEngine)> for TestComponent {
                 ..Default::default()
             }]
         );
+        
+        // test window
+        egui::Window::new("Test")
+            .show(&egui.context, |ui| { 
+                ui.label("Hi from test window!"); 
+                if ui.button("Test button").clicked() {
+                    println!("Test button clicked!");
+                }
+            });
     }
     
-    fn render<'rpass>(&'rpass self, engine: &'rpass RenderEngine, pass: &mut wgpu::RenderPass<'rpass>) {
+    fn render<'rpass>(&'rpass mut self, engine: &'rpass RenderEngine, pass: &mut wgpu::RenderPass<'rpass>) {
         // draw
         self.pipeline.bind(pass);
         self.camera.bind(pass, 0);
         engine.draw_textured_mesh(pass, &self.mesh, &self.texture, &self.instance_buffer, self.instances.len() as u32);
     }
 
-    fn exit(&mut self, _: (&mut RenderEngine, &mut UIEngine)) {}
+    fn exit(&mut self, _: (&mut RenderEngine, &mut UIEngine, &mut EguiEngine)) {}
 }
 
 create_app!(
@@ -129,7 +138,8 @@ create_app!(
 
     APP {
         ui_engine: UIEngine[render_engine],
-        test: TestComponent[render_engine, ui_engine]
+        test: TestComponent[render_engine, ui_engine, egui],
+        egui: EguiEngine[render_engine]
     },
 
     PASSES {
@@ -138,7 +148,7 @@ create_app!(
             DEPTH: true
         },
         1: {
-            COMPONENTS: [ui_engine],
+            COMPONENTS: [ui_engine, egui],
             DEPTH: false
         }
     }

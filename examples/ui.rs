@@ -56,7 +56,7 @@ impl EngineComponent<(&mut RenderEngine, &mut UIEngine)> for TestComponent {
 
     fn create(_: &mut RenderEngine) -> Self { Self {} }
     fn update(&mut self, _: (&mut RenderEngine, &mut UIEngine)) {}
-    fn render<'rpass>(&'rpass self, _: &'rpass RenderEngine, _: &mut wgpu::RenderPass<'rpass>) {}
+    fn render<'rpass>(&'rpass mut self, _: &'rpass RenderEngine, _: &mut wgpu::RenderPass<'rpass>) {}
     fn exit(&mut self, _: (&mut RenderEngine, &mut UIEngine)) {}
 }
 

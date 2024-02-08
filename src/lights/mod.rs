@@ -163,7 +163,7 @@ impl EngineComponent<&mut RenderEngine> for LightEngine {
     }
 
     /// On render, this engine binds its lights to the current render pass.
-    fn render<'rpass>(&'rpass self, _: &'rpass RenderEngine, pass: &mut wgpu::RenderPass<'rpass>) {
+    fn render<'rpass>(&'rpass mut self, _: &'rpass RenderEngine, pass: &mut wgpu::RenderPass<'rpass>) {
         pass.set_bind_group(2, self.bind_group(), &[]);
     }
 
