@@ -21,7 +21,7 @@ pub struct Camera {
 
 impl Camera {
     /// The bind group layout to be used to use this camera in any shader.  This is hear to promote consistency across implementations.
-    pub const BIND_LAYOUT: wgpu::BindGroupLayoutDescriptor<'_> = wgpu::BindGroupLayoutDescriptor {
+    pub const BIND_LAYOUT: wgpu::BindGroupLayoutDescriptor<'static> = wgpu::BindGroupLayoutDescriptor {
         label: Some("camera_bind_layout"),
         entries: &[
             wgpu::BindGroupLayoutEntry {

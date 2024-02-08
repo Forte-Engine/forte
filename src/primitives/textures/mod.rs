@@ -14,7 +14,7 @@ pub struct Texture {
 
 impl Texture {
     /// The bind group layout for the texture so there is consistency across implementations that use this texture.
-    pub const BIND_LAYOUT: wgpu::BindGroupLayoutDescriptor<'_> = wgpu::BindGroupLayoutDescriptor {
+    pub const BIND_LAYOUT: wgpu::BindGroupLayoutDescriptor<'static> = wgpu::BindGroupLayoutDescriptor {
         entries: &[
             wgpu::BindGroupLayoutEntry {
                 binding: 0,

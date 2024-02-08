@@ -12,7 +12,7 @@ pub struct LightUniform {
 
 impl LightUniform {
     /// The bind group layout to be used for LightUniform.  This is here to promote consistency across implementations.
-    pub const BIND_LAYOUT: wgpu::BindGroupLayoutDescriptor<'_> = wgpu::BindGroupLayoutDescriptor {
+    pub const BIND_LAYOUT: wgpu::BindGroupLayoutDescriptor<'static> = wgpu::BindGroupLayoutDescriptor {
         entries: &[
             wgpu::BindGroupLayoutEntry {
                 binding: 0,
