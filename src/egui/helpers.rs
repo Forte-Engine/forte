@@ -1,5 +1,6 @@
 use winit::{keyboard::KeyCode, window::CursorIcon};
 
+/// Returns an attempt to convert an `egui::CursorIcon` to `winit::window::CursorIcon`.
 #[inline]
 pub(crate) fn egui_to_winit_cursor_icon(icon: egui::CursorIcon) -> Option<winit::window::CursorIcon> {
     use egui::CursorIcon::*;
@@ -43,6 +44,7 @@ pub(crate) fn egui_to_winit_cursor_icon(icon: egui::CursorIcon) -> Option<winit:
     }
 }
 
+/// Returns an attempt to convert a `winit::keyboard::Key` to an `egui::Key`.
 pub fn key_from_winit_key(key: &winit::keyboard::Key) -> Option<egui::Key> {
     match key {
         winit::keyboard::Key::Named(named_key) => key_from_named_key(*named_key),
@@ -51,6 +53,7 @@ pub fn key_from_winit_key(key: &winit::keyboard::Key) -> Option<egui::Key> {
     }
 }
 
+/// Returns an attempt to convert a `winit::keyboard::NamedKey` to `egui::Key`.
 fn key_from_named_key(named_key: winit::keyboard::NamedKey) -> Option<egui::Key> {
     use egui::Key;
     use winit::keyboard::NamedKey;
@@ -103,6 +106,7 @@ fn key_from_named_key(named_key: winit::keyboard::NamedKey) -> Option<egui::Key>
     })
 }
 
+/// Returns an attempt to convert a `winit::keyboard::KeyCode` to a `egui::Key`.
 pub fn key_from_key_code(key: winit::keyboard::KeyCode) -> Option<egui::Key> {
     use egui::Key;
 
@@ -208,6 +212,7 @@ pub fn key_from_key_code(key: winit::keyboard::KeyCode) -> Option<egui::Key> {
     })
 }
 
+/// Returns an attempt to convert the given `winit::keyboard::KeyCode` to a `&str`.
 pub fn key_code_to_text(key_code: &KeyCode) -> Option<&str> {
     match key_code {
         KeyCode::Backquote => Some("\""),

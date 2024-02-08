@@ -117,7 +117,7 @@ impl EngineComponent<(&mut RenderEngine, &mut UIEngine, &mut EguiEngine)> for Te
         
         // test window
         egui::Window::new("Test")
-            .show(&egui.context, |ui| { 
+            .show(egui.context(), |ui| { 
                 ui.label("Hi from test window!");
                 ui.text_edit_singleline(&mut self.test); 
                 if ui.button("Search").clicked() {
