@@ -4,7 +4,7 @@ use winit::{event::*, keyboard::PhysicalKey};
 /// An enum that represents all inputs that the engine currently supports in an easy to reference manner.
 /// 
 /// Options:
-/// * MouseMove(movenent: Point2<f32>) - Represents how much a mouse moved.
+/// * MouseMove(position: Point2<f32>) - Represents new mouse position.
 /// * MouseButton(button: MouseButton, state: ElementState) - Represents a state change (pressed or released) of a mouse button.
 /// * MouseWheel(delta: MouseScrollDelta) - Represents how much the mouse wheel was turned.
 /// * KeyInput(key: VirtualKeyCode, state: ElementState) - Represents a state change (pressed or released) of a keyboard input.

@@ -1,9 +1,11 @@
 use log::info;
-use render::{input::EngineInput, render_engine::RenderEngine};
+use inputs::winit_input::EngineInput;
+use render::render_engine::RenderEngine;
 use winit::{event_loop::EventLoop, window::WindowBuilder, event::{Event, WindowEvent}, dpi::PhysicalSize};
 
 pub mod component_app;
 pub mod egui;
+pub mod inputs;
 pub mod lights;
 pub mod math;
 pub mod primitives;

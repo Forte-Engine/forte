@@ -63,19 +63,22 @@ macro_rules! create_app {
             }
         ),*}
     ) => {
-        use forte_engine::{EngineApp, start_render, end_render, pass, render::{input::EngineInput, render_engine::RenderEngine, render_utils}};
+        use forte_engine::{EngineApp, start_render, end_render, pass, inputs::{Inputs, winit_input::EngineInput}, render::{render_engine::RenderEngine, render_utils}};
 
         pub struct App {
             render_engine: RenderEngine,
+            inputs: Inputs,
             $($component: $type,)*
         }
 
         impl EngineApp for App {
             // Takes in a render engine and creates each component individually in the order listed, then saves them into a new instance of App.
             fn create(mut render_engine: RenderEngine) -> Self {
+                let inputs = Inputs::new();
                 $(let $component = <$type>::create(&mut render_engine);)*
                 Self {
                     render_engine,
+                    inputs,
                     $($component,)*
                 }
             }
@@ -151,10 +154,15 @@ macro_rules! create_app {
 
                 // call next frame, will be replaced later
                 self.render_engine.next_frame();
+
+                // reset inputs
+                self.inputs.reset();
             }
 
             // takes all input from the event loop, will be processed later
-            fn input(&mut self, input: EngineInput) {}
+            fn input(&mut self, input: EngineInput) {
+                self.inputs.handle_input(input);
+            }
             
             // passes all resize from the event loop to the render engine
             fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) { self.render_engine.resize(new_size); }

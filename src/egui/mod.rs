@@ -1,7 +1,7 @@
-use egui::{ClippedPrimitive, FontDefinitions, FullOutput, TexturesDelta};
+use egui::{ClippedPrimitive, FontDefinitions, TexturesDelta};
 use egui_wgpu::ScreenDescriptor;
 
-use crate::{component_app::EngineComponent, render::render_engine::RenderEngine};
+use crate::{component_app::EngineComponent, inputs::Inputs, render::render_engine::RenderEngine};
 
 pub mod helpers;
 
@@ -18,7 +18,7 @@ struct EguiRenderInfo {
     paint_jobs: Vec<ClippedPrimitive>
 }
 
-impl EngineComponent<&mut RenderEngine> for EguiEngine {
+impl EngineComponent<(&mut RenderEngine, &mut Inputs)> for EguiEngine {
     fn create(engine: &mut RenderEngine) -> Self {
         // setup egui renderer
         let renderer = egui_wgpu::Renderer::new(&engine.device, wgpu::TextureFormat::Bgra8UnormSrgb, None, 1);
@@ -41,9 +41,6 @@ impl EngineComponent<&mut RenderEngine> for EguiEngine {
         };
 
         // create unused egui render info
-        let encoder = engine.device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
-            label: Some("encoder"),
-        });
         let info = EguiRenderInfo {
             desc: ScreenDescriptor {
                 size_in_pixels: [engine.size.width, engine.size.height],
@@ -56,11 +53,11 @@ impl EngineComponent<&mut RenderEngine> for EguiEngine {
         Self { renderer, context, raw_input, info }
     }
 
-    fn start(&mut self, _: &mut RenderEngine) {
+    fn start(&mut self, _: (&mut RenderEngine, &mut Inputs)) {
         self.context.begin_frame(self.raw_input.take());
     }
 
-    fn update(&mut self, engine: &mut RenderEngine) {
+    fn update(&mut self, (engine, inputs): (&mut RenderEngine, &mut Inputs)) {
         // end current frame
         let output = self.context.end_frame();
 
@@ -89,11 +86,12 @@ impl EngineComponent<&mut RenderEngine> for EguiEngine {
     }
 
     fn render<'rpass>(&'rpass mut self, engine: &'rpass RenderEngine, pass: &mut wgpu::RenderPass<'rpass>) {
+        // create a command encode for drawing
         let mut encoder = engine.device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
             label: Some("encoder"),
         });
 
-        if !self.info.tdelta.set.is_empty() { println!("Tdelta"); }
+        // handle texture delta
         self.info.tdelta.set.iter().for_each(|(id, delta)| {
             self.renderer.update_texture(&engine.device, &engine.queue, *id, delta);
         });
@@ -106,5 +104,5 @@ impl EngineComponent<&mut RenderEngine> for EguiEngine {
         engine.queue.submit(std::iter::once(encoder.finish()));
     }
 
-    fn exit(&mut self, other: &mut RenderEngine) {}
+    fn exit(&mut self, _: (&mut RenderEngine, &mut Inputs)) {}
 }

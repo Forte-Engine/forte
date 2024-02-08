@@ -139,7 +139,7 @@ create_app!(
     APP {
         ui_engine: UIEngine[render_engine],
         test: TestComponent[render_engine, ui_engine, egui],
-        egui: EguiEngine[render_engine]
+        egui: EguiEngine[render_engine, inputs]
     },
 
     PASSES {

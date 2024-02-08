@@ -1,5 +1,5 @@
 use cgmath::{Rotation3, Quaternion};
-use forte_engine::{end_render, math::transforms::Transform, pass, primitives::{cameras::Camera, mesh::Mesh, textures::Texture, transforms::TransformRaw, vertices::Vertex}, render::{pipelines::Pipeline, render_engine::*, input::EngineInput}, utils::{camera_controller::CameraController, resources::Handle}, run_app, start_render, EngineApp};
+use forte_engine::{end_render, inputs::winit_input::EngineInput, math::transforms::Transform, pass, primitives::{cameras::Camera, mesh::Mesh, textures::Texture, transforms::TransformRaw, vertices::Vertex}, render::{pipelines::Pipeline, render_engine::*}, run_app, start_render, utils::{camera_controller::CameraController, resources::Handle}, EngineApp};
 use wgpu::util::DeviceExt;
 use winit::event::ElementState;
 
