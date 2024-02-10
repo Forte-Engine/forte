@@ -58,7 +58,9 @@ macro_rules! create_app {
         ),*},
         PASSES {$(
             $pass_idx:literal: {
-                COMPONENTS: [$($to_render:ident),*],
+                PIPELINE: $pipeline:expr,
+                PREPARE: [$($prepare:ident),*],
+                RENDER: $to_render:ident,
                 DEPTH: $depth:literal
             }
         ),*}
@@ -143,9 +145,12 @@ macro_rules! create_app {
                         });
 
                         // call all members of this pass' render functions
+                        // self.$pipeline;//.bind(&mut pass);
+                        self.render_engine.pipeline_path($pipeline).unwrap().bind(&mut pass);
                         $(
-                            self.$to_render.render(&self.render_engine, &mut pass);
+                            self.$prepare.render(&self.render_engine, &mut pass);
                         )*
+                        self.$to_render.render(&self.render_engine, &mut pass);
                     }
                 )*
 

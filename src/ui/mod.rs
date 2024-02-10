@@ -26,7 +26,6 @@ const INDICES: &[u16] = &[
 
 // The engine for rendering UI.
 pub struct UIEngine {
-    pipeline: Pipeline,
     mesh: Handle<Mesh>,
     default_texture: Handle<Texture>,
     pub elements: Vec<UIElement>,
@@ -52,13 +51,15 @@ mod ui_shader {}
 
 impl EngineComponent<&mut RenderEngine> for UIEngine {
     fn create(engine: &mut RenderEngine) -> Self {
-        let pipeline = Pipeline::new(
-            "ui", engine, ui_shader::SOURCE,
-            &[Vertex::desc(), UIInstance::desc()],
-            &[
-                &engine.device.create_bind_group_layout(&Texture::BIND_LAYOUT)
-            ], false
-        );
+        engine.verify_pipeline_exists("forte.ui", |engine| {
+            Pipeline::new(
+                "ui", engine, ui_shader::SOURCE,
+                &[Vertex::desc(), UIInstance::desc()],
+                &[
+                    &engine.device.create_bind_group_layout(&Texture::BIND_LAYOUT)
+                ], false
+            )
+        });
 
         let mesh = engine.create_mesh("ui_engine_mesh", VERTICES, INDICES);
         let default_texture = engine.create_texture("ui.blank", include_bytes!("empty.png"));
@@ -70,7 +71,7 @@ impl EngineComponent<&mut RenderEngine> for UIEngine {
         let text_renderer = TextRenderer::new(&mut text_atlas, &engine.device, MultisampleState::default(), None);
         
         Self { 
-            pipeline, mesh, 
+            mesh, 
             default_texture, elements: Vec::new(), 
             font_system, font_cache, 
             text_atlas, text_renderer
@@ -93,7 +94,6 @@ impl EngineComponent<&mut RenderEngine> for UIEngine {
     }
 
     fn render<'rpass>(&'rpass mut self, render_engine: &'rpass RenderEngine, pass: &mut wgpu::RenderPass<'rpass>) {
-        pass.set_pipeline(&self.pipeline.render_pipeline);
         render_ui(render_engine, pass, render_engine.mesh(&self.mesh), render_engine.texture(&self.default_texture), &self.elements);
         let _ = self.text_renderer.render(&self.text_atlas, pass);
     }

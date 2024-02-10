@@ -2,7 +2,7 @@
 name = "forte_engine"
 description = "A core for a basic render/game engine designed to have little overhead."
 license = "MIT"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 exclude = ["*.md"]
 

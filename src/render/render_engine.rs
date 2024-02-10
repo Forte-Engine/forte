@@ -1,4 +1,4 @@
-use std::time::SystemTime;
+use std::{marker::PhantomData, time::SystemTime};
 
 use winit::window::Window;
 
@@ -229,11 +229,24 @@ impl RenderEngine {
         self.mesh(mesh).draw_list(pass, instance_buffer, instance_count);
     }
 
+    pub fn pipeline(&self, handle: &Handle<Pipeline>) -> Option<&Pipeline> { self.pipeline_cache.get(handle) }
+    pub fn pipeline_mut(&mut self, handle: &Handle<Pipeline>) -> Option<&mut Pipeline> { self.pipeline_cache.get_mut(handle) }
+    pub fn pipeline_path(&self, path: impl Into<String>) -> Option<&Pipeline> { 
+        self.pipeline_cache.get(&Handle { hash: ResourceCache::<Pipeline>::hash_path(path.into()), data: PhantomData::default() }) 
+    }
+    pub fn pipeline_path_mut(&mut self, path: impl Into<String>) -> Option<&mut Pipeline> {
+        self.pipeline_cache.get_mut(&Handle { hash: ResourceCache::<Pipeline>::hash_path(path.into()), data: PhantomData::default() })
+    }
+
     pub fn register_pipeline(&mut self, path: impl Into<String>, pipeline: Pipeline) {
         self.pipeline_cache.insert(ResourceCache::<Pipeline>::hash_path(path.into()), pipeline);
     }
 
-    pub fn verify_pipeline_exists(&mut self, path: &str, create: fn() -> Pipeline) {
-        self.pipeline_cache.load(path, create);
+    pub fn verify_pipeline_exists<F>(&mut self, path: impl Into<String>, create: F) where F: Fn(&RenderEngine) -> Pipeline {
+        // self.pipeline_cache.load(path, || { create(&self.device) });
+        let hash = ResourceCache::<Pipeline>::hash_path(path.into());
+        if self.pipeline_cache.get(&Handle { hash, data: PhantomData::default() }).is_none() {
+            self.pipeline_cache.insert(hash, create(&self));
+        }
     }
 }

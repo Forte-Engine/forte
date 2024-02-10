@@ -28,7 +28,6 @@ const INDICES: &[u16] = &[
 ];
 
 pub struct TestComponent {
-    pipeline: Pipeline,
     mesh: Handle<Mesh>, 
     texture: Handle<Texture>, 
     camera: Camera,
@@ -56,8 +55,8 @@ impl EngineComponent<(&mut RenderEngine, &mut UIEngine, &mut EguiEngine)> for Te
             scale: (1.0, 1.0, 1.0).into()
         }];
 
-        Self {
-            pipeline: Pipeline::new(
+        engine.verify_pipeline_exists("forte.test", |engine| {
+            Pipeline::new(
                 "std", &engine, include_str!("rotating_cube.wgsl"),
                 &[Vertex::desc(), TransformRaw::desc()],
                 &[
@@ -65,7 +64,10 @@ impl EngineComponent<(&mut RenderEngine, &mut UIEngine, &mut EguiEngine)> for Te
                     &engine.device.create_bind_group_layout(&Texture::BIND_LAYOUT),
                 ],
                 true
-            ),
+            )
+        });
+
+        Self {
             instance_buffer: TransformRaw::buffer_from_generic(engine, &instances),
             mesh: engine.create_mesh("test", VERTICES, INDICES),
             texture: engine.create_texture("test", include_bytes!("rotating_cube.png")),
@@ -128,7 +130,6 @@ impl EngineComponent<(&mut RenderEngine, &mut UIEngine, &mut EguiEngine)> for Te
     
     fn render<'rpass>(&'rpass mut self, engine: &'rpass RenderEngine, pass: &mut wgpu::RenderPass<'rpass>) {
         // draw
-        self.pipeline.bind(pass);
         self.camera.bind(pass, 0);
         engine.draw_textured_mesh(pass, &self.mesh, &self.texture, &self.instance_buffer, self.instances.len() as u32);
     }
@@ -147,11 +148,21 @@ create_app!(
 
     PASSES {
         0: {
-            COMPONENTS: [test],
+            PIPELINE: "forte.test",
+            PREPARE: [],
+            RENDER: test,
             DEPTH: true
         },
         1: {
-            COMPONENTS: [ui_engine, egui],
+            PIPELINE: "forte.ui",
+            PREPARE: [],
+            RENDER: ui_engine,
+            DEPTH: false
+        },
+        2: {
+            PIPELINE: "forte.ui",
+            PREPARE: [],
+            RENDER: egui,
             DEPTH: false
         }
     }
