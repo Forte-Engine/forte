@@ -8,11 +8,6 @@ pub mod model;
 
 pub struct GLTFLoader;
 
-// todo textures
-// todo save node transforms in model
-// todo materials
-// todo - pbr textures (normal maps, specular maps, etc)
-
 impl GLTFLoader {
     pub fn unpack_static_gltf(engine: &RenderEngine, gltf: Gltf) -> Model {
         let buffers = Self::unpack_buffers(&gltf);
