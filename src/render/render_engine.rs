@@ -4,6 +4,8 @@ use winit::window::Window;
 
 use crate::{primitives::{mesh::Mesh, textures::{Texture, depth_textures::DepthTexture}, vertices::Vertex}, utils::{files::Files, resources::{ResourceCache, Handle}}};
 
+use super::pipelines::Pipeline;
+
 /// A struct with all required information to render to a given window.
 /// 
 /// DO NOT try to create this object by yourself, this object will be provided to your RenderEngineApp.
@@ -18,6 +20,7 @@ pub struct RenderEngine {
 
     mesh_cache: ResourceCache<Mesh>,
     texture_cache: ResourceCache<Texture>,
+    pipeline_cache: ResourceCache<Pipeline>,
     pub depth_texture: DepthTexture,
     pub(crate) start_time: u128,
     pub time_since_start: f32,
@@ -115,7 +118,8 @@ impl RenderEngine {
             time_since_start: 0.0,
             delta_time: 0.0,
             mesh_cache: ResourceCache::new(),
-            texture_cache: ResourceCache::new()
+            texture_cache: ResourceCache::new(),
+            pipeline_cache: ResourceCache::new()
         }
     }
     
@@ -223,5 +227,13 @@ impl RenderEngine {
     ) {
         self.texture(texture).bind(pass, 1);
         self.mesh(mesh).draw_list(pass, instance_buffer, instance_count);
+    }
+
+    pub fn register_pipeline(&mut self, path: impl Into<String>, pipeline: Pipeline) {
+        self.pipeline_cache.insert(ResourceCache::<Pipeline>::hash_path(path.into()), pipeline);
+    }
+
+    pub fn verify_pipeline_exists(&mut self, path: &str, create: fn() -> Pipeline) {
+        self.pipeline_cache.load(path, create);
     }
 }

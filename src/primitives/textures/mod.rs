@@ -63,7 +63,16 @@ impl Texture {
     ) -> Result<Self> {
         let rgba = img.to_rgba8();
         let dimensions = img.dimensions();
-
+        Self::from_raw(device, queue, &rgba, dimensions, label)
+    }
+    
+    pub fn from_raw(
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        rgba: &[u8],
+        dimensions: (u32, u32),
+        label: Option<&str>
+    ) -> Result<Self> {
         // create texture
         let size = wgpu::Extent3d {
             width: dimensions.0,

@@ -5,6 +5,7 @@ use winit::{event_loop::EventLoop, window::WindowBuilder, event::{Event, WindowE
 
 pub mod component_app;
 pub mod egui;
+pub mod gltf;
 pub mod inputs;
 pub mod lights;
 pub mod math;
