@@ -1,18 +1,35 @@
 use gltf::Gltf;
 
-use crate::{primitives::{mesh::Mesh, textures::Texture, vertices::Vertex}, render::render_engine::RenderEngine};
+use crate::{lights::lights::LightUniform, primitives::{cameras::Camera, mesh::Mesh, textures::Texture, transforms::TransformRaw, vertices::Vertex}, render::{pipelines::Pipeline, render_engine::RenderEngine}};
 
 use self::model::{Model, Node};
 
 pub mod model;
 
+#[include_wgsl_oil::include_wgsl_oil("../../shaders/gltf.wgsl")]
+mod gltf_shader {}
+
 pub struct GLTFLoader;
 
 impl GLTFLoader {
-    pub fn unpack_static_gltf(engine: &RenderEngine, gltf: Gltf) -> Model {
+    pub fn unpack_static_gltf(engine: &mut RenderEngine, gltf: Gltf) -> Model {
         let buffers = Self::unpack_buffers(&gltf);
 
         let mut root_nodes: Vec<Node> = Vec::new();
+
+        // make sure render pipeline exists
+        engine.verify_pipeline_exists("forte.gltf", |engine| {
+            Pipeline::new(
+                "std", &engine, gltf_shader::SOURCE,
+                &[Vertex::desc(), TransformRaw::desc()],
+                &[
+                    &engine.device.create_bind_group_layout(&Camera::BIND_LAYOUT),
+                    &engine.device.create_bind_group_layout(&Texture::BIND_LAYOUT),
+                    &engine.device.create_bind_group_layout(&LightUniform::BIND_LAYOUT),
+                ],
+                true
+            )
+        });
 
         // load nodes
         for scene in gltf.scenes() {

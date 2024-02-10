@@ -1,5 +1,5 @@
 use cgmath::Quaternion;
-use forte_engine::{component_app::EngineComponent, create_app, gltf::{model::{Model, Node}, GLTFLoader}, lights::{lights::LightUniform, LightEngine}, math::{quaternion::QuaternionExt, transforms::Transform}, primitives::{cameras::Camera, textures::Texture, transforms::TransformRaw, vertices::Vertex}, render::pipelines::Pipeline, run_app};
+use forte_engine::{component_app::EngineComponent, create_app, gltf::{model::{Model, Node}, GLTFLoader}, lights::{lights::LightUniform, LightEngine}, math::{quaternion::QuaternionExt, transforms::Transform}, primitives::{cameras::Camera, transforms::TransformRaw}, run_app};
 use gltf::Gltf;
 
 pub struct TestComponent {
@@ -7,9 +7,6 @@ pub struct TestComponent {
     model: Model,
     instance_buffer: wgpu::Buffer
 }
-
-#[include_wgsl_oil::include_wgsl_oil("../shaders/gltf.wgsl")]
-mod gltf_shader {}
 
 impl EngineComponent<(&mut RenderEngine, &mut LightEngine)> for TestComponent {
 
@@ -30,20 +27,7 @@ impl EngineComponent<(&mut RenderEngine, &mut LightEngine)> for TestComponent {
             scale: (1.0, 1.0, 1.0).into()
         }];
 
-        engine.verify_pipeline_exists("forte.gltf", |engine| {
-            Pipeline::new(
-                "std", &engine, gltf_shader::SOURCE,
-                &[Vertex::desc(), TransformRaw::desc()],
-                &[
-                    &engine.device.create_bind_group_layout(&Camera::BIND_LAYOUT),
-                    &engine.device.create_bind_group_layout(&Texture::BIND_LAYOUT),
-                    &engine.device.create_bind_group_layout(&LightUniform::BIND_LAYOUT),
-                ],
-                true
-            )
-        });
-
-        let gltf = GLTFLoader::unpack_static_gltf(&engine, Gltf::open("examples/mine.gltf.glb").expect("Could not load gltf!"));
+        let gltf = GLTFLoader::unpack_static_gltf(engine, Gltf::open("examples/mine.gltf.glb").expect("Could not load gltf!"));
 
         Self {
             instance_buffer: TransformRaw::buffer_from_generic(engine, &instances),
