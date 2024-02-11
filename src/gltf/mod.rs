@@ -1,6 +1,6 @@
 use gltf::Gltf;
 
-use crate::{lights::lights::LightUniform, primitives::{cameras::Camera, mesh::Mesh, textures::Texture, transforms::TransformRaw, vertices::Vertex}, render::{pipelines::Pipeline, render_engine::RenderEngine}};
+use crate::{create_pipeline, lights::lights::LightUniform, primitives::{cameras::Camera, mesh::Mesh, textures::Texture, transforms::TransformRaw, vertices::Vertex}, render::{pipelines::Pipeline, render_engine::RenderEngine}};
 
 use self::model::{Model, Node};
 
@@ -18,18 +18,14 @@ impl GLTFLoader {
         let mut root_nodes: Vec<Node> = Vec::new();
 
         // make sure render pipeline exists
-        engine.verify_pipeline_exists("forte.gltf", |engine| {
-            Pipeline::new(
-                "std", &engine, gltf_shader::SOURCE,
-                &[Vertex::desc(), TransformRaw::desc()],
-                &[
-                    &engine.device.create_bind_group_layout(&Camera::BIND_LAYOUT),
-                    &engine.device.create_bind_group_layout(&Texture::BIND_LAYOUT),
-                    &engine.device.create_bind_group_layout(&LightUniform::BIND_LAYOUT),
-                ],
-                true
-            )
-        });
+        create_pipeline! {
+            NAME => "forte.gltf",
+            ENGINE => engine,
+            SHADER => gltf_shader::SOURCE,
+            BUFFER_LAYOUTS => [Vertex::desc(), TransformRaw::desc()],
+            BIND_GROUPS => [Camera::BIND_LAYOUT, Texture::BIND_LAYOUT, LightUniform::BIND_LAYOUT],
+            HAS_DEPTH => true
+        }
 
         // load nodes
         for scene in gltf.scenes() {

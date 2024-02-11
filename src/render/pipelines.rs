@@ -128,3 +128,37 @@ impl Pipeline {
         pass.set_pipeline(&self.render_pipeline);
     }
 }
+
+/// Used to create and initialize a pipeline shader.
+/// 
+/// Example:
+/// ```rust
+/// create_pipeline! {
+///     NAME => "forte.gltf",
+///     ENGINE => engine,
+///     SHADER => gltf_shader::SOURCE,
+///     BUFFER_LAYOUTS => [Vertex::desc(), TransformRaw::desc()],
+///     BIND_GROUPS => [Camera::BIND_LAYOUT, Texture::BIND_LAYOUT, LightUniform::BIND_LAYOUT],
+///     HAS_DEPTH => true
+/// }
+/// ```
+#[macro_export]
+macro_rules! create_pipeline {
+    {
+        NAME => $name: literal,
+        ENGINE => $engine: expr,
+        SHADER => $shader: expr,
+        BUFFER_LAYOUTS => [$($buffer:expr),*],
+        BIND_GROUPS => [$($bind_group:expr),*],
+        HAS_DEPTH => $depth: literal
+    } => {
+        $engine.verify_pipeline_exists($name, |engine| {
+            Pipeline::new(
+                $name, &engine, $shader,
+                &[$($buffer),*],
+                &[$(&engine.device.create_bind_group_layout(&$bind_group)),*],
+                $depth
+            )
+        });
+    };
+}

@@ -2,7 +2,7 @@ use cgmath::{Quaternion, Vector2, Vector3, Zero};
 use glyphon::*;
 use wgpu::MultisampleState;
 
-use crate::{component_app::EngineComponent, math::{quaternion::QuaternionExt, transforms::Transform}, primitives::{mesh::Mesh, textures::Texture, transforms::TransformRaw, vertices::Vertex}, render::{pipelines::Pipeline, render_engine::RenderEngine}, utils::resources::Handle};
+use crate::{component_app::EngineComponent, create_pipeline, math::{quaternion::QuaternionExt, transforms::Transform}, primitives::{mesh::Mesh, textures::Texture, transforms::TransformRaw, vertices::Vertex}, render::{pipelines::Pipeline, render_engine::RenderEngine}, utils::resources::Handle};
 
 use self::{elements::{ElementInfo, UIElement}, style::PositionSetting, uniforms::UIInstance};
 
@@ -51,15 +51,14 @@ mod ui_shader {}
 
 impl EngineComponent<&mut RenderEngine> for UIEngine {
     fn create(engine: &mut RenderEngine) -> Self {
-        engine.verify_pipeline_exists("forte.ui", |engine| {
-            Pipeline::new(
-                "ui", engine, ui_shader::SOURCE,
-                &[Vertex::desc(), UIInstance::desc()],
-                &[
-                    &engine.device.create_bind_group_layout(&Texture::BIND_LAYOUT)
-                ], false
-            )
-        });
+        create_pipeline! {
+            NAME => "forte.ui",
+            ENGINE => engine,
+            SHADER => ui_shader::SOURCE,
+            BUFFER_LAYOUTS => [Vertex::desc(), UIInstance::desc()],
+            BIND_GROUPS => [Texture::BIND_LAYOUT],
+            HAS_DEPTH => false
+        }
 
         let mesh = engine.create_mesh("ui_engine_mesh", VERTICES, INDICES);
         let default_texture = engine.create_texture("ui.blank", include_bytes!("empty.png"));
