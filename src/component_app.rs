@@ -25,29 +25,42 @@ pub trait EngineComponent<T> {
 /// Example:
 /// ```rust
 /// create_app!(
-///    // The color used when the display clears before drawing the next frame.
-///    CLEAR_COLOR = wgpu::Color { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
-///
-///    // A list of components and the fields needed to call them (see the generic argument in `EngineComponent` for more info).
-///    APP {
-///        ui_engine: UIEngine[render_engine],
-///        test: TestComponent[render_engine, ui_engine]
-///    },
-///
-///    // List of render passes to draw.  They will be rendered in order with the clear color applied to whichever is marked as 0.
-///    // The COMPONENTS array is a list of fields that must be a subset of the fields defined in the APP section and their render functions will be called in order.
-///    // The DEPTH boolean defines if a depth texture should be present in the render pass used.
-///    PASSES {
-///        0: {
-///            COMPONENTS: [test],
-///            DEPTH: true
-///        },
-///        1: {
-///            COMPONENTS: [ui_engine],
-///            DEPTH: false
-///        }
-///    }
-///);
+///     CLEAR_COLOR = wgpu::Color { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
+/// 
+///     APP {
+///         ui_engine: UIEngine[render_engine],
+///         test: TestComponent[render_engine, ui_engine, egui],
+///         egui: EguiEngine[render_engine, inputs]
+///     },
+/// 
+///     PASSES {
+///         0: {
+///             PARTS: [
+///                 {
+///                     PIPELINE: "forte.test",
+///                     PREPARE: [],
+///                     RENDER: test,
+///                 }
+///             ],
+///             DEPTH: true
+///         },
+///         1: {
+///             PARTS: [
+///                 {
+///                     PIPELINE: "forte.ui",
+///                     PREPARE: [],
+///                     RENDER: ui_engine,
+///                 },
+///                 {
+///                     PIPELINE: "forte.ui",
+///                     PREPARE: [],
+///                     RENDER: egui,
+///                 }
+///             ],
+///             DEPTH: false
+///         }
+///     }
+/// );
 /// ```
 #[macro_export]
 macro_rules! create_app {
@@ -149,8 +162,7 @@ macro_rules! create_app {
                         });
 
                         $(
-                        // call all members of this pass' render functions
-                        // self.$pipeline;//.bind(&mut pass);
+                            // call all members of this pass' render functions
                             self.render_engine.pipeline_path($pipeline).unwrap().bind(&mut pass);
                             $(
                                 self.$prepare.render(&self.render_engine, &mut pass);
