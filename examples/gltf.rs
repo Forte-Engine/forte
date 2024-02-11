@@ -89,9 +89,13 @@ create_app!(
 
     PASSES {
         0: {
-            PIPELINE: "forte.gltf",
-            PREPARE: [light_engine],
-            RENDER: test,
+            PARTS: [
+                {
+                    PIPELINE: "forte.gltf",
+                    PREPARE: [light_engine],
+                    RENDER: test,
+                }
+            ],
             DEPTH: true
         }
     }

@@ -70,9 +70,13 @@ create_app!(
 
     PASSES {
         0: {
-            PIPELINE: "forte.ui",
-            PREPARE: [],
-            RENDER: ui_engine,
+            PARTS: [
+                {
+                    PIPELINE: "forte.ui",
+                    PREPARE: [],
+                    RENDER: ui_engine,
+                }
+            ],
             DEPTH: false
         }
     }

@@ -58,9 +58,13 @@ macro_rules! create_app {
         ),*},
         PASSES {$(
             $pass_idx:literal: {
-                PIPELINE: $pipeline:expr,
-                PREPARE: [$($prepare:ident),*],
-                RENDER: $to_render:ident,
+                PARTS: [$(
+                    {
+                        PIPELINE: $pipeline:expr,
+                        PREPARE: [$($prepare:ident),*],
+                        RENDER: $to_render:ident,
+                    }
+                ),*],
                 DEPTH: $depth:literal
             }
         ),*}
@@ -144,13 +148,15 @@ macro_rules! create_app {
                             timestamp_writes: None,
                         });
 
+                        $(
                         // call all members of this pass' render functions
                         // self.$pipeline;//.bind(&mut pass);
-                        self.render_engine.pipeline_path($pipeline).unwrap().bind(&mut pass);
-                        $(
-                            self.$prepare.render(&self.render_engine, &mut pass);
+                            self.render_engine.pipeline_path($pipeline).unwrap().bind(&mut pass);
+                            $(
+                                self.$prepare.render(&self.render_engine, &mut pass);
+                            )*
+                            self.$to_render.render(&self.render_engine, &mut pass);
                         )*
-                        self.$to_render.render(&self.render_engine, &mut pass);
                     }
                 )*
 
