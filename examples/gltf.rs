@@ -79,7 +79,7 @@ fn render_nodes<'rpass>(pass: &mut wgpu::RenderPass<'rpass>, node: &'rpass Node,
     }
 }
 
-create_app!(
+create_app! {
     CLEAR_COLOR = wgpu::Color { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
 
     APP {
@@ -99,6 +99,6 @@ create_app!(
             DEPTH: true
         }
     }
-);
+}
 
 fn main() { run_app::<App>() }

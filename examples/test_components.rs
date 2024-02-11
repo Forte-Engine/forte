@@ -137,7 +137,7 @@ impl EngineComponent<(&mut RenderEngine, &mut UIEngine, &mut EguiEngine)> for Te
     fn exit(&mut self, _: (&mut RenderEngine, &mut UIEngine, &mut EguiEngine)) {}
 }
 
-create_app!(
+create_app! {
     CLEAR_COLOR = wgpu::Color { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
 
     APP {
@@ -173,6 +173,6 @@ create_app!(
             DEPTH: false
         }
     }
-);
+}
 
 fn main() { run_app::<App>() }

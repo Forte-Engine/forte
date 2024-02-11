@@ -24,7 +24,7 @@ pub trait EngineComponent<T> {
 /// 
 /// Example:
 /// ```rust
-/// create_app!(
+/// create_app! {
 ///     CLEAR_COLOR = wgpu::Color { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
 /// 
 ///     APP {
@@ -60,11 +60,11 @@ pub trait EngineComponent<T> {
 ///             DEPTH: false
 ///         }
 ///     }
-/// );
+/// }
 /// ```
 #[macro_export]
 macro_rules! create_app {
-    (
+    {
         CLEAR_COLOR = $color:expr,
         APP {$(
             $component:ident: $type:ty[$($param:ident),*]
@@ -81,7 +81,7 @@ macro_rules! create_app {
                 DEPTH: $depth:literal
             }
         ),*}
-    ) => {
+    } => {
         use forte_engine::{EngineApp, start_render, end_render, pass, inputs::{Inputs, winit_input::EngineInput}, render::{render_engine::RenderEngine, render_utils}};
 
         pub struct App {
