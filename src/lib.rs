@@ -5,10 +5,10 @@ use winit::{event_loop::EventLoop, window::WindowBuilder, event::{Event, WindowE
 
 pub mod component_app;
 pub mod egui;
-pub mod gltf;
 pub mod inputs;
 pub mod lights;
 pub mod math;
+pub mod models;
 pub mod primitives;
 pub mod render;
 pub mod ui;

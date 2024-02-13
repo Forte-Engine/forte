@@ -59,16 +59,37 @@ fn vs_main(
     return out;
 }
 
-// Fragment shader
-
 @group(1) @binding(0)
-var t_diffuse: texture_2d<f32>;
+var diffuse_texture: texture_2d<f32>;
 @group(1) @binding(1)
-var s_diffuse: sampler;
+var diffuse_sampler: sampler;
+@group(1) @binding(2)
+var roughness_texture: texture_2d<f32>;
+@group(1) @binding(3)
+var roughness_sampler: sampler;
+@group(1) @binding(4)
+var emissive_texture: texture_2d<f32>;
+@group(1) @binding(5)
+var emissive_sampler: sampler;
+@group(1) @binding(6)
+var normal_texture: texture_2d<f32>;
+@group(1) @binding(7)
+var normal_sampler: sampler;
+@group(1) @binding(8)
+var occlusion_texture: texture_2d<f32>;
+@group(1) @binding(9)
+var occlusion_sampler: sampler;
+@group(1) @binding(10)
+var<uniform> diffuse_color: vec4<f32>;
+@group(1) @binding(11)
+var<uniform> emissive_color: vec4<f32>;
+@group(1) @binding(12)
+var<uniform> metadata: vec4<f32>; // FORMAT: metallic_factor, roughness_factor, alpha_mode, alpha_cutoff
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
-    let diffuse = textureSample(t_diffuse, s_diffuse, in.tex_coords);
-    let color = diffuse.xyz * Lights::calculate_lights(camera.view_pos.xyz, in.world_position, in.world_normal);
-    return vec4<f32>(color, diffuse.a);
+    // let diffuse = textureSample(t_diffuse, s_diffuse, in.tex_coords);
+    // let color = diffuse.xyz * Lights::calculate_lights(camera.view_pos.xyz, in.world_position, in.world_normal);
+    // return vec4<f32>(1.0, 0.0, 0.0, 1.0);
+    return diffuse_color * vec4<f32>(Lights::calculate_lights(camera.view_pos.xyz, in.world_position, in.world_normal), 1.0);
 }

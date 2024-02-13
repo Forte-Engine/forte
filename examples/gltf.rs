@@ -1,5 +1,5 @@
 use cgmath::Quaternion;
-use forte_engine::{component_app::EngineComponent, create_app, gltf::{model::{Model, Node}, GLTFLoader}, lights::{lights::LightUniform, LightEngine}, math::{quaternion::QuaternionExt, transforms::Transform}, primitives::{cameras::Camera, transforms::TransformRaw}, run_app};
+use forte_engine::{component_app::EngineComponent, create_app, lights::{lights::LightUniform, LightEngine}, math::{quaternion::QuaternionExt, transforms::Transform}, models::{gltf::GLTFLoader, Model}, primitives::{cameras::Camera, transforms::TransformRaw}, run_app};
 use gltf::Gltf;
 
 pub struct TestComponent {
@@ -64,19 +64,10 @@ impl EngineComponent<(&mut RenderEngine, &mut LightEngine)> for TestComponent {
     
     fn render<'rpass>(&'rpass mut self, _: &'rpass RenderEngine, pass: &mut wgpu::RenderPass<'rpass>) {
         self.camera.bind(pass, 0);
-        self.model.nodes.iter().for_each(|node| render_nodes(pass, node, &self.instance_buffer));
+        self.model.draw(pass, &self.instance_buffer, 1);
     }
 
     fn exit(&mut self, _: (&mut RenderEngine, &mut LightEngine)) {}
-}
-
-fn render_nodes<'rpass>(pass: &mut wgpu::RenderPass<'rpass>, node: &'rpass Node, instances: &'rpass wgpu::Buffer) {
-    if let Some(meshes) = &node.meshes {
-        meshes.iter().for_each(|drawn| {
-            drawn.1.bind(pass, 1);
-            drawn.0.draw(pass, instances, 1);
-        });
-    }
 }
 
 create_app! {
