@@ -1,5 +1,3 @@
-use std::num::NonZeroU64;
-
 use wgpu::util::DeviceExt;
 
 use crate::{primitives::textures::Texture, render::render_engine::RenderEngine, ui::style::Color};
@@ -301,11 +299,10 @@ impl Material {
 }
 
 fn create_empty_texture(engine: &RenderEngine) -> Texture {
-    Texture::from_raw(
+    Texture::from_bytes(
         &engine.device, 
         &engine.queue, 
-        bytemuck::cast_slice(&([1.0, 1.0, 1.0, 1.0] as [f32; 4])), 
-        (1, 1), 
-        None
+        include_bytes!("empty.png"), 
+        "forte.material.blank_texture", 
     ).expect("Empty texture for Material did not create properly.")
 }

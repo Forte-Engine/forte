@@ -90,6 +90,6 @@ var<uniform> metadata: vec4<f32>; // FORMAT: metallic_factor, roughness_factor, 
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     // let diffuse = textureSample(t_diffuse, s_diffuse, in.tex_coords);
     // let color = diffuse.xyz * Lights::calculate_lights(camera.view_pos.xyz, in.world_position, in.world_normal);
-    // return vec4<f32>(1.0, 0.0, 0.0, 1.0);
-    return diffuse_color * vec4<f32>(Lights::calculate_lights(camera.view_pos.xyz, in.world_position, in.world_normal), 1.0);
+    let lights = vec4<f32>(Lights::calculate_lights(camera.view_pos.xyz, in.world_position, in.world_normal), 1.0);
+    return diffuse_color * textureSample(diffuse_texture, diffuse_sampler, in.tex_coords) * lights;
 }
