@@ -63,7 +63,7 @@ impl RenderEngine {
 
         // create wgpu instance
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
-            backends: wgpu::Backends::all(),
+            backends: wgpu::Backends::GL,
             ..Default::default()
         });
 
@@ -82,7 +82,7 @@ impl RenderEngine {
         // create device and queue
         let (device, queue) = pollster::block_on(adapter.request_device(
             &wgpu::DeviceDescriptor {
-                required_features: wgpu::Features::VERTEX_WRITABLE_STORAGE,
+                required_features: wgpu::Features::empty(),
                 required_limits: wgpu::Limits::default(),
                 label: None
             },
