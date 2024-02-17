@@ -7,15 +7,15 @@ struct Light {
     cutoff: f32
 }
 @group(2) @binding(0)
-var<storage, read_write> lights: array<Light>;
+var<uniform> lights: array<Light, 1024u>;
 @group(2) @binding(1)
-var<uniform> num_lights: u32;
+var<uniform> num_lights: vec4<u32>;
 @group(2) @binding(2)
-var<uniform> ambient_light: vec3<f32>;
+var<uniform> ambient_light: vec4<f32>;
 
 fn calculate_lights(view_pos: vec3<f32>, position: vec3<f32>, normal: vec3<f32>) -> vec3<f32> {
     var light_color = vec3<f32>(0.0, 0.0, 0.0);
-    for (var i = 0u; i < num_lights; i += 1u) {
+    for (var i = 0u; i < num_lights.x; i += 1u) {
         // calculate basic light values
         let light = lights[i];
         let delta = light.position - position;
@@ -46,5 +46,5 @@ fn calculate_lights(view_pos: vec3<f32>, position: vec3<f32>, normal: vec3<f32>)
         // calculate and append final light color
         light_color += (diffuse_color + specular_color) * light_strength;
     }
-    return light_color + ambient_light;
+    return light_color + ambient_light.xyz;
 }

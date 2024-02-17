@@ -1,5 +1,3 @@
-use std::time::SystemTime;
-
 use wgpu::{TextureView, CommandEncoder, SurfaceTexture};
 
 use super::render_engine::RenderEngine;
@@ -60,7 +58,7 @@ pub fn finalize_render(
     resources.output.present();
 
     // update time since start and delta time
-    let now = SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis();
+    let now = web_time::SystemTime::now().duration_since(web_time::UNIX_EPOCH).unwrap().as_millis();
     let old_time = engine.time_since_start;
     let ms_since_start = if now > engine.start_time { now - engine.start_time } else { 0 };
     engine.time_since_start = ms_since_start as f32 / 1000.0;

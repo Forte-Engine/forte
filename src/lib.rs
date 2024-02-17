@@ -1,4 +1,3 @@
-use log::info;
 use inputs::winit_input::EngineInput;
 use render::render_engine::RenderEngine;
 use winit::{event_loop::EventLoop, window::WindowBuilder, event::{Event, WindowEvent}, dpi::PhysicalSize};
@@ -46,7 +45,6 @@ pub trait EngineApp {
 /// When an exit is request the loop will stop and then the exit function will be called before cleaning up all resources used by the render engine and this function.
 /// When an input is received through the event loop is first passed to the render engine for initial processing before the apps input function is called.
 pub fn run_app<T: EngineApp + 'static>() {
-    println!("Starting run_app");
     cfg_if::cfg_if! {
         if #[cfg(target_arch = "wasm32")] {
             std::panic::set_hook(Box::new(console_error_panic_hook::hook));
@@ -57,7 +55,7 @@ pub fn run_app<T: EngineApp + 'static>() {
     }
     
     // setup window and event loop
-    info!("Creating window and event loop...");
+    log!("Creating window and event loop...");
     let event_loop = EventLoop::new().unwrap();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 
@@ -83,15 +81,15 @@ pub fn run_app<T: EngineApp + 'static>() {
 
 
     // setup engine
-    info!("Creating RenderEngine...");
+    log!("Creating RenderEngine...");
     let engine = RenderEngine::new(window);
 
     // create app
-    info!("Creating app...");
+    log!("Creating app...");
     let mut app = T::create(engine);
     app.start();
 
-    info!("Starting event loop...");
+    log!("Starting event loop...");
     let _ = event_loop.run(move |event, target| {
         match event {
             // window events
@@ -129,4 +127,35 @@ pub fn run_app<T: EngineApp + 'static>() {
             Event::MemoryWarning => panic!("Out of memory!"),
         }
     });
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+extern "C" {
+    // Use `js_namespace` here to bind `console.log(..)` instead of just
+    // `log(..)`
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &str);
+
+    // The `console.log` is quite polymorphic, so we can bind it with multiple
+    // signatures. Note that we need to use `js_name` to ensure we always call
+    // `log` in JS.
+    #[wasm_bindgen(js_namespace = console, js_name = log)]
+    fn log_u32(a: u32);
+
+    // Multiple arguments too!
+    #[wasm_bindgen(js_namespace = console, js_name = log)]
+    fn log_many(a: &str, b: &str);
+}
+
+#[macro_export]
+macro_rules! log {
+    // Note that this is using the `log` function imported above during
+    // `bare_bones`
+    ($($t:tt)*) => {
+        #[cfg(target_arch = "wasm32")]
+        log(&format_args!($($t)*).to_string());
+        #[cfg(not(target_arch = "wasm32"))]
+        println!("{}", format_args!($($t)*).to_string());
+    }
 }

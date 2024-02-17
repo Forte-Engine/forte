@@ -22,7 +22,7 @@ pub struct LightEngine {
     dirty: bool
 }
 
-impl EngineComponent<&mut RenderEngine> for LightEngine {
+impl EngineComponent<&mut RenderEngine<'static>> for LightEngine {
 
     /// Creates a new light engine.
     /// 
@@ -38,7 +38,7 @@ impl EngineComponent<&mut RenderEngine> for LightEngine {
             &wgpu::util::BufferInitDescriptor {
                 label: Some("Light Buffer"),
                 contents: bytemuck::cast_slice(&[default_light]),
-                usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST
+                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST
             }
         );
 
@@ -121,7 +121,7 @@ impl EngineComponent<&mut RenderEngine> for LightEngine {
                 &wgpu::util::BufferInitDescriptor {
                     label: Some("Light Buffer"),
                     contents: bytemuck::cast_slice(&lights),
-                    usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST
+                    usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST
                 }
             );
         

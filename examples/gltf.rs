@@ -27,7 +27,8 @@ impl EngineComponent<(&mut RenderEngine, &mut LightEngine)> for TestComponent {
             scale: (1.0, 1.0, 1.0).into()
         }];
 
-        let gltf = GLTFLoader::unpack_static_gltf(engine, Gltf::open("examples/mine.gltf.glb").expect("Could not load gltf!"));
+        let gltf = Gltf::from_slice(include_bytes!("mine.gltf.glb")).expect("Could not load binary gltf");
+        let gltf = GLTFLoader::unpack_static_gltf(engine, gltf);
 
         Self {
             instance_buffer: TransformRaw::buffer_from_generic(engine, &instances),

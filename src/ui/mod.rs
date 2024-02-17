@@ -49,7 +49,7 @@ pub struct UIRenderInfo {
 #[include_wgsl_oil::include_wgsl_oil("ui.wgsl")]
 mod ui_shader {}
 
-impl EngineComponent<&mut RenderEngine> for UIEngine {
+impl EngineComponent<&mut RenderEngine<'static>> for UIEngine {
     fn create(engine: &mut RenderEngine) -> Self {
         create_pipeline! {
             NAME => "forte.ui",

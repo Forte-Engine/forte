@@ -1,8 +1,9 @@
-use std::{marker::PhantomData, time::SystemTime};
+use std::{borrow::Borrow, marker::PhantomData};
 
+use wgpu::{rwh::{HasRawWindowHandle, HasWindowHandle, WindowHandle}, SurfaceTarget};
 use winit::window::Window;
 
-use crate::{primitives::{mesh::Mesh, textures::{Texture, depth_textures::DepthTexture}, vertices::Vertex}, utils::{files::Files, resources::{ResourceCache, Handle}}};
+use crate::{log, primitives::{mesh::Mesh, textures::{depth_textures::DepthTexture, Texture}, vertices::Vertex}, utils::{files::Files, resources::{Handle, ResourceCache}}};
 
 use super::pipelines::Pipeline;
 
@@ -11,8 +12,8 @@ use super::pipelines::Pipeline;
 /// DO NOT try to create this object by yourself, this object will be provided to your RenderEngineApp.
 /// DO NOT try to modify any values in this struct, this will only cause errors unless you know what you are doing.
 #[derive(Debug)]
-pub struct RenderEngine {
-    pub surface: wgpu::Surface<'static>,
+pub struct RenderEngine<'engine> {
+    pub surface: wgpu::Surface<'engine>,
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
     pub config: wgpu::SurfaceConfiguration,
@@ -29,7 +30,7 @@ pub struct RenderEngine {
     pub window: Window // must be declared after surface due to unsafe code in windows resources
 }
 
-impl RenderEngine {
+impl <'engine> RenderEngine<'engine> {
     /// Get a reference to the WGPU window used by the render engine.
     pub fn window(&self) -> &Window { &self.window }
 
@@ -61,14 +62,23 @@ impl RenderEngine {
     pub fn new(window: Window) -> Self {
         let size = window.inner_size();
 
+        log!("Creating instance...");
+
         // create wgpu instance
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends: wgpu::Backends::GL,
             ..Default::default()
         });
 
-        // create surface
+        log!("Creating surface...");
+
+        // create surface TODO why is this stopping
+        // let handle = Box::new(window);
+        // let surface = instance.create_surface(unsafe { WindowHandle::borrow_raw(window.raw_window_handle().unwrap()) }).unwrap();
+        // let surface = unsafe { instance.create_surface(&window) }.unwrap();
         let surface = unsafe { instance.create_surface_unsafe(wgpu::SurfaceTargetUnsafe::from_window(&window).unwrap()) }.unwrap();
+
+        log!("Creating adapter...");
 
         // create adapter
         let adapter = pollster::block_on(instance.request_adapter(
@@ -79,15 +89,18 @@ impl RenderEngine {
             }
         )).unwrap();
 
+        log!("Creating device and queue...");
         // create device and queue
         let (device, queue) = pollster::block_on(adapter.request_device(
             &wgpu::DeviceDescriptor {
-                required_features: wgpu::Features::empty(),
-                required_limits: wgpu::Limits::default(),
+                required_features: adapter.features(),
+                required_limits: adapter.limits(),//wgpu::Limits::default(),
                 label: None
             },
             None
         )).unwrap();
+
+        log!("Performing final capabilities creation...");
 
         // configure surface
         let capabilities = surface.get_capabilities(&adapter);
@@ -96,7 +109,7 @@ impl RenderEngine {
             .unwrap_or(capabilities.formats[0]);
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: format, width: size.width, height: size.height,
+            format: format, width: size.width.max(1), height: size.height.max(1),
             present_mode: capabilities.present_modes[0],
             alpha_mode: capabilities.alpha_modes[0],
             view_formats: vec![],
@@ -108,8 +121,11 @@ impl RenderEngine {
         let depth_texture = DepthTexture::new(&config, &device, "depth_texture");
 
         // setup timing
-        let now = SystemTime::now();
-        let start_time = now.duration_since(std::time::UNIX_EPOCH).unwrap().as_millis();
+        let now = web_time::SystemTime::now();
+
+        let start_time = now.duration_since(web_time::UNIX_EPOCH).unwrap().as_millis();
+
+        log!("Created render engine");
 
         Self {
             window, surface, device,

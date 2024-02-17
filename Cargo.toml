@@ -23,6 +23,7 @@ egui-wgpu = { version = "0.26.0", features = ["winit"] }
 egui-winit = { version = "0.26.0", default-features = false }
 cfg-if = "1.0.0"
 env_logger = "0.11.2"
+web-time = "1.0.0"
 
 [dependencies.image]
 version = "0.24"
