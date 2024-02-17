@@ -88,9 +88,10 @@ impl Camera {
     /// Builds a view projection matrix for this camera.
     /// 
     /// Returns the view and projection matrix for this camera.
-    pub fn build_view_projection_matrix(&self) -> cgmath::Matrix4<f32> {
+    pub fn build_view_projection_matrix(&self, engine: &RenderEngine) -> cgmath::Matrix4<f32> {
         let view = Matrix4::from(self.rotation) * Matrix4::from_translation(-self.position);
-        let proj = cgmath::perspective(cgmath::Deg(self.fovy), self.aspect, self.znear, self.zfar);
+        let proj = cgmath::perspective(cgmath::Deg(self.fovy), engine.config.width as f32 / engine.config.height as f32, self.znear, self.zfar);
+        // println!("Build")
         return OPENGL_TO_WGPU_MATRIX * proj * view;
     }
 
@@ -98,9 +99,9 @@ impl Camera {
     /// 
     /// Arguments:
     /// * engine: &mut RenderEngine - The render engine to which the buffers will be updated.
-    pub fn update(&mut self, engine: &mut RenderEngine) {
+    pub fn update(&mut self, engine: &RenderEngine) {
         self.uniform.view_position = [self.position.x, self.position.y, self.position.z, 0.0];
-        self.uniform.view_proj = self.build_view_projection_matrix().into();
+        self.uniform.view_proj = self.build_view_projection_matrix(engine).into();
         engine.queue.write_buffer(&self.buffer, 0, bytemuck::cast_slice(&[self.uniform]));
     }
 
@@ -111,10 +112,12 @@ impl Camera {
     /// * pass: &mut wgpu::RenderPass - The render pass to bind too.
     /// * index: u32 - The index in the bind group to bind too.
     pub fn bind<'rpass>(
-        &'rpass self,
+        &'rpass mut self,
         pass: &mut wgpu::RenderPass<'rpass>,
+        engine: &RenderEngine,
         index: u32
     ) {
+        self.update(engine);
         pass.set_bind_group(index, &self.bind_group, &[]);
     }
 }

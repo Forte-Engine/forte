@@ -130,7 +130,7 @@ impl EngineComponent<(&mut RenderEngine, &mut UIEngine, &mut EguiEngine)> for Te
     
     fn render<'rpass>(&'rpass mut self, engine: &'rpass RenderEngine, pass: &mut wgpu::RenderPass<'rpass>) {
         // draw
-        self.camera.bind(pass, 0);
+        self.camera.bind(pass, engine, 0);
         engine.draw_textured_mesh(pass, &self.mesh, &self.texture, &self.instance_buffer, self.instances.len() as u32);
     }
 

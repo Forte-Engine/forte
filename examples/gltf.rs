@@ -62,8 +62,8 @@ impl EngineComponent<(&mut RenderEngine, &mut LightEngine)> for TestComponent {
         );
     }
     
-    fn render<'rpass>(&'rpass mut self, _: &'rpass RenderEngine, pass: &mut wgpu::RenderPass<'rpass>) {
-        self.camera.bind(pass, 0);
+    fn render<'rpass>(&'rpass mut self, engine: &'rpass RenderEngine, pass: &mut wgpu::RenderPass<'rpass>) {
+        self.camera.bind(pass, engine, 0);
         self.model.draw(pass, &self.instance_buffer, 1);
     }
 

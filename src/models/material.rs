@@ -29,7 +29,6 @@ impl MaterialBuilder {
                 usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST
             }
         );
-        println!("Albedo {:?}", self.albedo_color);
 
         // create emissive buffer
         let emissive_buffer = engine.device.create_buffer_init(

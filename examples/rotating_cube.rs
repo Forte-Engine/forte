@@ -129,7 +129,7 @@ impl EngineApp for MainApp {
 
             // draw
             self.pipeline.bind(&mut pass);
-            self.camera.bind(&mut pass, 0);
+            self.camera.bind(&mut pass, &self.render_engine, 0);
             self.render_engine.draw_textured_mesh(&mut pass, &self.mesh, &self.texture, &self.instance_buffer, self.instances.len() as u32);
         }
 
