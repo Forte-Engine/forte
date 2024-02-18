@@ -1,6 +1,5 @@
-use std::{borrow::Borrow, marker::PhantomData};
+use std::marker::PhantomData;
 
-use wgpu::{rwh::{HasRawWindowHandle, HasWindowHandle, WindowHandle}, SurfaceTarget};
 use winit::window::Window;
 
 use crate::{log, primitives::{mesh::Mesh, textures::{depth_textures::DepthTexture, Texture}, vertices::Vertex}, utils::{files::Files, resources::{Handle, ResourceCache}}};
@@ -12,8 +11,8 @@ use super::pipelines::Pipeline;
 /// DO NOT try to create this object by yourself, this object will be provided to your RenderEngineApp.
 /// DO NOT try to modify any values in this struct, this will only cause errors unless you know what you are doing.
 #[derive(Debug)]
-pub struct RenderEngine<'engine> {
-    pub surface: wgpu::Surface<'engine>,
+pub struct RenderEngine {
+    pub surface: wgpu::Surface<'static>,
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
     pub config: wgpu::SurfaceConfiguration,
@@ -30,7 +29,7 @@ pub struct RenderEngine<'engine> {
     pub window: Window // must be declared after surface due to unsafe code in windows resources
 }
 
-impl <'engine> RenderEngine<'engine> {
+impl RenderEngine {
     /// Get a reference to the WGPU window used by the render engine.
     pub fn window(&self) -> &Window { &self.window }
 

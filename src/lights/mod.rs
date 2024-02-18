@@ -22,7 +22,7 @@ pub struct LightEngine {
     dirty: bool
 }
 
-impl EngineComponent<&mut RenderEngine<'static>> for LightEngine {
+impl EngineComponent<&mut RenderEngine> for LightEngine {
 
     /// Creates a new light engine.
     /// 

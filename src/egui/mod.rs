@@ -60,7 +60,7 @@ impl EguiEngine {
     pub fn context_mut(&mut self) -> &mut egui::Context { &mut self.context }
 }
 
-impl EngineComponent<(&mut RenderEngine<'static>, &mut Inputs)> for EguiEngine {
+impl EngineComponent<(&mut RenderEngine, &mut Inputs)> for EguiEngine {
     /// Creates a new instance of `EguiEngine` from the given mutable reference to a `RenderEngine`.
     fn create(engine: &mut RenderEngine) -> Self {
         // setup egui renderer
