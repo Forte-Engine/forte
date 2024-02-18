@@ -57,7 +57,10 @@ pub async fn run_app<T: EngineApp + 'static>() {
     // setup window and event loop
     log!("Creating window and event loop...");
     let event_loop = EventLoop::new().unwrap();
-    let window = WindowBuilder::new().build(&event_loop).unwrap();
+    let window = WindowBuilder::new()
+        .with_title("Forte Engine App")
+        .with_inner_size(PhysicalSize::new(1280, 720))
+        .build(&event_loop).unwrap();
 
     // If in wasm mode, direct window to a canvas
     #[cfg(target_arch = "wasm32")]
@@ -65,14 +68,17 @@ pub async fn run_app<T: EngineApp + 'static>() {
         // Winit prevents sizing with CSS, so we have to set
         // the size manually when on web.
         use winit::dpi::PhysicalSize;
-        window.set_min_inner_size(Some(PhysicalSize::new(450, 400)));
+        window.set_min_inner_size(Some(PhysicalSize::new(1280, 720)));
         
         use winit::platform::web::WindowExtWebSys;
         web_sys::window()
             .and_then(|win| win.document())
             .and_then(|doc| {
                 let dst = doc.get_element_by_id("forte")?;
-                let canvas = web_sys::Element::from(window.canvas().unwrap());
+                let canvas = window.canvas().unwrap();
+                canvas.set_width(1280);
+                canvas.set_height(720);
+                let canvas = web_sys::Element::from(canvas);
                 dst.append_child(&canvas).ok()?;
                 Some(())
             })
