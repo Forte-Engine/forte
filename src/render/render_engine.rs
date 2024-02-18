@@ -71,10 +71,7 @@ impl RenderEngine {
 
         log!("Creating surface...");
 
-        // create surface TODO why is this stopping
-        // let handle = Box::new(window);
-        // let surface = instance.create_surface(unsafe { WindowHandle::borrow_raw(window.raw_window_handle().unwrap()) }).unwrap();
-        // let surface = unsafe { instance.create_surface(&window) }.unwrap();
+        // create surface
         let surface = unsafe { instance.create_surface_unsafe(wgpu::SurfaceTargetUnsafe::from_window(&window).unwrap()) }.unwrap();
 
         log!("Creating adapter...");
