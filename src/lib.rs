@@ -44,7 +44,7 @@ pub trait EngineApp {
 /// Then the once per frame, the apps update and render functions will be called.
 /// When an exit is request the loop will stop and then the exit function will be called before cleaning up all resources used by the render engine and this function.
 /// When an input is received through the event loop is first passed to the render engine for initial processing before the apps input function is called.
-pub fn run_app<T: EngineApp + 'static>() {
+pub async fn run_app<T: EngineApp + 'static>() {
     cfg_if::cfg_if! {
         if #[cfg(target_arch = "wasm32")] {
             std::panic::set_hook(Box::new(console_error_panic_hook::hook));
@@ -82,7 +82,7 @@ pub fn run_app<T: EngineApp + 'static>() {
 
     // setup engine
     log!("Creating RenderEngine...");
-    let engine = RenderEngine::new(window);
+    let engine = RenderEngine::new(window).await;
 
     // create app
     log!("Creating app...");

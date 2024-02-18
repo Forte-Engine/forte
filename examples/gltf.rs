@@ -97,6 +97,6 @@ create_app! {
 use wasm_bindgen::prelude::*;
 
 #[cfg_attr(target_arch="wasm32", wasm_bindgen(start))]
-pub fn run() { println!("Starting run"); run_app::<App>() }
+pub async fn run() { println!("Starting run"); run_app::<App>().await }
 
-fn main() { println!("Starting main"); run_app::<App>() }
+fn main() { println!("Starting main"); pollster::block_on(run_app::<App>()) }

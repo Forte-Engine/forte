@@ -82,4 +82,4 @@ create_app! {
     }
 }
 
-fn main() { run_app::<App>() }
+fn main() { pollster::block_on(run_app::<App>()) }

@@ -46,7 +46,7 @@ impl EngineComponent<&mut RenderEngine> for LightEngine {
         let light_count_buffer = engine.device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor {
                 label: Some("Light Count Buffer"),
-                contents: bytemuck::cast_slice(&[1]),
+                contents: bytemuck::cast_slice(&[1, 0, 0, 0]),
                 usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST
             }
         );
@@ -55,7 +55,7 @@ impl EngineComponent<&mut RenderEngine> for LightEngine {
         let light_ambient_buffer = engine.device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor {
                 label: Some("Light Ambient Buffer"),
-                contents: bytemuck::cast_slice(&[0.0, 0.0, 0.0]),
+                contents: bytemuck::cast_slice(&[0.0, 0.0, 0.0, 0.0]),
                 usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST
             }
         );
@@ -100,11 +100,11 @@ impl EngineComponent<&mut RenderEngine> for LightEngine {
         engine.queue.write_buffer(
             &self.light_count_buffer, 
             0, 
-            bytemuck::cast_slice(&[self.lights.len() as u32])
+            bytemuck::cast_slice(&[self.lights.len() as u32, 0, 0, 0])
         );
 
         // update ambient light buffer
-        engine.queue.write_buffer(&self.light_ambient_buffer, 0, bytemuck::cast_slice(&self.ambient_color));
+        engine.queue.write_buffer(&self.light_ambient_buffer, 0, bytemuck::cast_slice(&[self.ambient_color[0], self.ambient_color[1], self.ambient_color[2], 0.0]));
 
         // if the lights count is not the same size as the current count, create a new buffer and bind count
         if self.last_count != self.lights.len() {
