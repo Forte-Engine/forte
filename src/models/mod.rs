@@ -12,7 +12,7 @@ pub struct Model {
 
 impl Model {
     // simply call draws for all nodes in this model
-    pub fn draw<'rpass>(&'rpass mut self, pass: &mut wgpu::RenderPass<'rpass>, instances: &'rpass wgpu::Buffer, num_instances: u32) {
+    pub fn draw<'rpass>(&'rpass self, pass: &mut wgpu::RenderPass<'rpass>, instances: &'rpass wgpu::Buffer, num_instances: u32) {
         self.nodes.iter().for_each(|node| node.draw(pass, instances, num_instances));
     }
 }
