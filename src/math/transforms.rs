@@ -1,7 +1,7 @@
 use cgmath::*;
 
 /// A representation of a transform using a vector3 position, and scale, and a quaternion rotation.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Transform {
     /// The position of the transform.
     pub position: cgmath::Vector3<f32>,
